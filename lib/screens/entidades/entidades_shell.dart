@@ -62,9 +62,7 @@ class _EntidadesShellState extends State<EntidadesShell> {
   }
 
   Widget _buildSidebarDrawer() {
-    return Drawer(
-      child: _buildSidebar(),
-    );
+    return Drawer(child: _buildSidebar());
   }
 
   Widget _buildSidebar() {
@@ -84,7 +82,7 @@ class _EntidadesShellState extends State<EntidadesShell> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'EcoAlert',
+                      'RILU',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
@@ -157,12 +155,18 @@ class _EntidadesShellState extends State<EntidadesShell> {
                     await Supabase.instance.client.auth.signOut();
                     if (mounted) {
                       Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (_) => const InicioSesion2()),
+                        MaterialPageRoute(
+                          builder: (_) => const InicioSesion2(),
+                        ),
                         (route) => false,
                       );
                     }
                   },
-                  icon: const Icon(Icons.logout, color: Colors.white54, size: 20),
+                  icon: const Icon(
+                    Icons.logout,
+                    color: Colors.white54,
+                    size: 20,
+                  ),
                   tooltip: 'Cerrar sesión',
                 ),
               ],

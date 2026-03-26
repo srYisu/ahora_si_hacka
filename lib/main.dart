@@ -22,7 +22,7 @@ class EcoAlertApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'EcoAlert',
+      title: 'RILU',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(brightness: Brightness.light, fontFamily: 'Segoe UI'),
       home: const _AuthGate(),
