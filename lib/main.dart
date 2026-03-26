@@ -4,10 +4,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // TODO: Reemplaza con tus credenciales de Supabase
   await Supabase.initialize(
-    url: 'AQUI_VA_TU_SUPABASE_URL',
-    anonKey: 'AQUI_VA_TU_ANON_KEY',
+    url: 'https://bhceqzmvnlepsynaxcqx.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoY2Vxem12bmxlcHN5bmF4Y3F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjAwMzQsImV4cCI6MjA5MDAzNjAzNH0.U_D2N9fXWTR1EDbmhbkEkyrKxlf1xsCE4FHota6ZrqU',
   );
 
   runApp(const MainApp());
