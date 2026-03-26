@@ -313,10 +313,9 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
 
             if (res.user != null) {
               // 5. Guardar el perfil en tu propia tabla de base de datos
-              await Supabase.instance.client.from('usuarios').insert({
-                'auth_user_id': res.user!.id,
-                'nombre_completo': nombre,
-                'correo': email,
+              await Supabase.instance.client.from('usuarios_comunes').insert({
+                'id': res.user!.id,
+                'nombre': nombre,
               });
 
               _showFloatingMessage(
