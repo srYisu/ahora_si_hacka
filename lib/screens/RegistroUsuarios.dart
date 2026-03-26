@@ -318,7 +318,6 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
             return;
           }
 
-<<<<<<< HEAD
           // 4. Si ingresó código de org, verificar que exista
           String? organizacionId;
           if (codigoOrg.isNotEmpty) {
@@ -346,98 +345,6 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
               );
               return;
             }
-=======
-          // 4. Obtener ubicación GPS actual
-          double lat = 0.0;
-          double lng = 0.0;
-
-          try {
-            bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-            if (!serviceEnabled) {
-              _showFloatingMessage(context, 'Por favor activa el GPS de tu dispositivo', Colors.orange);
-              return;
-            }
-
-            LocationPermission permission = await Geolocator.checkPermission();
-            if (permission == LocationPermission.denied) {
-              // --- PANTALLA VISUAL / POP-UP DEL HACKATHON ---
-              bool? allowLocation = await showDialog<bool>(
-                context: context,
-                barrierDismissible: false, // Obliga a tocar un botón
-                builder: (BuildContext dContext) {
-                  return AlertDialog(
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    title: const Row(
-                      children: [
-                        Icon(Icons.location_on, color: Color(0xFF004D40), size: 28),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'Ubicación Requerida',
-                            style: TextStyle(
-                              color: Color(0xFF004D40),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    content: const Text(
-                      'EcoAlert necesita formar un mapa inteligente contigo. Para completarlo, asignaremos tu registro a tu punto de origen en el campo de acción.\n\nPor favor, en la siguiente pantalla autoriza al sistema para usar tu GPS.',
-                      style: TextStyle(height: 1.4, color: Colors.black87),
-                    ),
-                    actionsAlignment: MainAxisAlignment.spaceBetween,
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(dContext, false),
-                        child: const Text('Cancelar', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(dContext, true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF004D40),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          elevation: 0,
-                        ),
-                        child: const Text('¡Entendido!', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                      ),
-                    ],
-                  );
-                },
-              );
-
-              if (allowLocation != true) {
-                _showFloatingMessage(context, 'Registro cancelado: El mapa es requerido', Colors.orange);
-                return;
-              }
-              // --- FIN PANTALLA VISUAL ---
-
-              // Ahora sí, llamamos al permiso nativo, feo y gris de Android:
-              permission = await Geolocator.requestPermission();
-              if (permission == LocationPermission.denied) {
-                _showFloatingMessage(context, 'Permiso de ubicación denegado', Colors.redAccent);
-                return;
-              }
-            }
-
-            if (permission == LocationPermission.deniedForever) {
-              _showFloatingMessage(context, 'Permisos denegados permanentemente', Colors.redAccent);
-              return;
-            }
-
-            Position position = await Geolocator.getCurrentPosition(
-              desiredAccuracy: LocationAccuracy.best,
-            );
-            lat = position.latitude;
-            lng = position.longitude;
-          } catch (e) {
-            _showFloatingMessage(context, 'Error al obtener ubicación', Colors.redAccent);
-            return;
->>>>>>> d1ed0ca494be02f6a80a022ef493f713f9370d5e
           }
 
           // 5. Intentar crear cuenta con Supabase
@@ -455,7 +362,6 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
             );
 
             if (res.user != null) {
-<<<<<<< HEAD
               // 6. Guardar el perfil en la tabla usuarios
               final Map<String, dynamic> userData = {
                 'auth_user_id': res.user!.id,
@@ -469,15 +375,6 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
               }
 
               await Supabase.instance.client.from('usuarios').insert(userData);
-=======
-              // 6. Guardar el perfil con coordenadas en tu propia tabla de base de datos
-              await Supabase.instance.client.from('usuarios_comunes').insert({
-                'id': res.user!.id,
-                'nombre': nombre,
-                'latitud': lat,
-                'longitud': lng,
-              });
->>>>>>> d1ed0ca494be02f6a80a022ef493f713f9370d5e
 
               _showFloatingMessage(
                 context,
@@ -627,3 +524,4 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
     );
   }
 }
+//a
