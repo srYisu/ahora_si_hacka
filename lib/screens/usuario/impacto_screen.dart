@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../core/app_theme.dart';
 import '../../widgets/stat_card.dart';
 
+
 class ImpactoScreen extends StatelessWidget {
   const ImpactoScreen({super.key});
 
@@ -63,17 +64,17 @@ class ImpactoScreen extends StatelessWidget {
                 child: StatCard(
                   icon: Icons.delete_outline,
                   value: '450',
-                  label: 'BOLSAS DE BASURA',
+                  label: 'SÓLIDOS RECUPERADOS',
                   subtitle: '↗ +12% vs mes ant.',
                 ),
               ),
               SizedBox(width: 10),
               Expanded(
                 child: StatCard(
-                  icon: Icons.auto_delete_outlined,
+                  icon: Icons.water_drop_outlined,
                   value: '890',
-                  label: 'PLÁSTICO RETIRADO',
-                  subtitle: '🏠 Meta: 1,000kg',
+                  label: 'LÍQUIDOS TRATADOS',
+                  subtitle: '🏠 Meta: 1,000L',
                 ),
               ),
             ],
@@ -83,9 +84,9 @@ class ImpactoScreen extends StatelessWidget {
             width: double.infinity,
             height: 195,
             child: StatCard(
-              icon: Icons.recycling,
+              icon: Icons.grass_outlined,
               value: '120',
-              label: 'CONTENEDORES DE RECICLAJE',
+              label: 'ORGÁNICOS COMPOSTADOS',
               subtitle: '✓ Optimización del 94%',
               highlighted: true,
             ),
@@ -106,8 +107,8 @@ class ImpactoScreen extends StatelessWidget {
               SizedBox(width: 10),
               Expanded(
                 child: MiniStatCard(
-                  icon: Icons.location_on_outlined,
-                  label: 'ZONAS LIMPIAS',
+                  icon: Icons.warning_amber_outlined,
+                  label: 'PELIGROSOS GESTIONADOS',
                   value: '42',
                   progress: 0.6,
                 ),
