@@ -34,6 +34,7 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
+  final TextEditingController _codigoOrgController = TextEditingController();
 
   @override
   void dispose() {
@@ -41,6 +42,7 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _codigoOrgController.dispose();
     super.dispose();
   }
 
@@ -153,6 +155,25 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
                             obscure: true,
                             controller: _confirmPasswordController,
                           ),
+                          const SizedBox(height: 20),
+
+                          // CÓDIGO DE ORGANIZACIÓN (OPCIONAL)
+                          _buildLabel("CÓDIGO DE ORGANIZACIÓN (OPCIONAL)"),
+                          const SizedBox(height: 8),
+                          _buildTextField(
+                            Icons.business_outlined,
+                            "Ej. ECO-2026-ABC",
+                            controller: _codigoOrgController,
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Si perteneces a una organización, ingresa el código que te proporcionaron.',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                           const SizedBox(height: 35),
 
                           // BOTÓN DE REGISTRO
@@ -261,15 +282,16 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
           final email = _emailController.text.trim();
           final password = _passwordController.text.trim();
           final confirmPassword = _confirmPasswordController.text.trim();
+          final codigoOrg = _codigoOrgController.text.trim();
 
-          // 1. Validar campos vacíos
+          // 1. Validar campos obligatorios
           if (nombre.isEmpty ||
               email.isEmpty ||
               password.isEmpty ||
               confirmPassword.isEmpty) {
             _showFloatingMessage(
               context,
-              'Por favor, complete todos los campos',
+              'Por favor, complete todos los campos obligatorios',
               Colors.redAccent,
             );
             return;
@@ -295,7 +317,36 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
             return;
           }
 
-          // 4. Intentar crear cuenta con Supabase
+          // 4. Si ingresó código de org, verificar que exista
+          String? organizacionId;
+          if (codigoOrg.isNotEmpty) {
+            try {
+              final orgData = await Supabase.instance.client
+                  .from('organizaciones')
+                  .select('id')
+                  .eq('codigo_organizacion', codigoOrg)
+                  .maybeSingle();
+
+              if (orgData == null) {
+                _showFloatingMessage(
+                  context,
+                  'El código de organización no existe. Verifica e intenta de nuevo.',
+                  Colors.orange,
+                );
+                return;
+              }
+              organizacionId = orgData['id'].toString();
+            } catch (e) {
+              _showFloatingMessage(
+                context,
+                'Error al verificar el código: $e',
+                Colors.redAccent,
+              );
+              return;
+            }
+          }
+
+          // 5. Intentar crear cuenta con Supabase
           try {
             _showFloatingMessage(
               context,
@@ -306,26 +357,35 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
             final res = await Supabase.instance.client.auth.signUp(
               email: email,
               password: password,
-              data: {
-                'full_name': nombre,
-              }, // Guardamos el nombre en los metadatos
+              data: {'full_name': nombre},
             );
 
             if (res.user != null) {
-              // 5. Guardar el perfil en tu propia tabla de base de datos
-              await Supabase.instance.client.from('usuarios').insert({
+              // 6. Guardar el perfil en la tabla usuarios
+              final Map<String, dynamic> userData = {
                 'auth_user_id': res.user!.id,
                 'nombre_completo': nombre,
                 'correo': email,
-              });
+              };
+
+              // Si tiene organización, agregar el vínculo
+              if (organizacionId != null) {
+                userData['organizacion_id'] = organizacionId;
+              }
+
+              await Supabase.instance.client.from('usuarios').insert(userData);
 
               _showFloatingMessage(
                 context,
-                '¡Cuenta creada exitosamente y guardada en la base de datos!',
+                organizacionId != null
+                    ? '¡Cuenta creada y vinculada a la organización!'
+                    : '¡Cuenta creada exitosamente!',
                 const Color(0xFF004D40),
               );
-              // Si pruebas la navegación, descomenta la siguiente línea:
-              // Navigator.pop(context);
+
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
             }
           } on AuthException catch (e) {
             _showFloatingMessage(
