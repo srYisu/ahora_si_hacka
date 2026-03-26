@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'core/app_theme.dart';
+import 'screens/dashboard_shell.dart';
 
 void main() {
   runApp(const MainApp());
@@ -9,12 +11,11 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
+    return MaterialApp(
+      title: 'Precision Conservator',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      home: const DashboardShell(),
     );
   }
 }
