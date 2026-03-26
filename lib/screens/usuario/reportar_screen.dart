@@ -157,13 +157,13 @@ class _ReportarScreenState extends State<ReportarScreen> {
       
       if (suggestedType == -1) {
         // AI Logic based on ML Kit labels
-        if (_hasMatch(text, ['food', 'fruit', 'vegetable', 'plant', 'organism', 'leaf', 'wood', 'grass'])) {
+        if (_hasMatch(text, ['food', 'fruit', 'vegetable', 'plant', 'organism', 'leaf', 'wood', 'grass', 'compost', 'seed'])) {
           suggestedType = 3; // Orgánico
-        } else if (_hasMatch(text, ['plastic', 'bottle', 'can', 'waste', 'trash', 'paper', 'metal', 'glass', 'garbage', 'debris', 'tin'])) {
+        } else if (_hasMatch(text, ['plastic', 'bottle', 'can', 'waste', 'trash', 'paper', 'metal', 'glass', 'garbage', 'debris', 'tin', 'box', 'aluminum', 'gadget', 'device', 'electronic'])) {
           suggestedType = 0; // Sólido
-        } else if (_hasMatch(text, ['liquid', 'water', 'oil', 'fluid', 'beverage', 'gasoline'])) {
+        } else if (_hasMatch(text, ['liquid', 'water', 'oil', 'fluid', 'beverage', 'gasoline', 'paint', 'cleaning'])) {
           suggestedType = 1; // Líquido
-        } else if (_hasMatch(text, ['chemical', 'battery', 'drug', 'hazard', 'toxic', 'poison', 'medicine', 'explosion'])) {
+        } else if (_hasMatch(text, ['chemical', 'battery', 'drug', 'hazard', 'toxic', 'poison', 'medicine', 'explosion', 'cell', 'accumulator', 'powerbank', 'nuclear', 'acid'])) {
           suggestedType = 2; // Peligroso
         }
       }
