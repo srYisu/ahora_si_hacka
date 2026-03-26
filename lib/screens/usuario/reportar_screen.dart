@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_mlkit_image_labeling/google_mlkit_image_labeling.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:io';
 import '../../core/app_theme.dart';
 
 class ReportarScreen extends StatefulWidget {
@@ -14,6 +19,12 @@ class ReportarScreen extends StatefulWidget {
 class _ReportarScreenState extends State<ReportarScreen> {
   int _selectedWasteType = -1;
   final _descCtrl = TextEditingController();
+  File? _selectedImage;
+  bool _isUploading = false;
+  String _priority = 'MEDIA';
+  
+  // ML Kit setup
+  late ImageLabeler _labeler;
 
   // --- MAPA VARIABLES ---
   final MapController _mapController = MapController();
@@ -24,7 +35,31 @@ class _ReportarScreenState extends State<ReportarScreen> {
   @override
   void initState() {
     super.initState();
-    _updateAddressFromMap(_currentPos);
+    _labeler = ImageLabeler(options: ImageLabelerOptions(confidenceThreshold: 0.5));
+    _getCurrentLocation();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return;
+    }
+
+    if (permission == LocationPermission.deniedForever) return;
+
+    final position = await Geolocator.getCurrentPosition();
+    if (!mounted) return;
+
+    final newPos = LatLng(position.latitude, position.longitude);
+    _mapController.move(newPos, 14);
+    _updateAddressFromMap(newPos);
   }
 
   Future<void> _updateAddressFromMap(LatLng position) async {
@@ -67,8 +102,110 @@ class _ReportarScreenState extends State<ReportarScreen> {
 
   @override
   void dispose() {
+    _labeler.close();
     _descCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: source, imageQuality: 70);
+    if (picked != null) {
+      final file = File(picked.path);
+      setState(() => _selectedImage = file);
+      _analyzeImageWithAI(file);
+    }
+  }
+
+  Future<void> _analyzeImageWithAI(File image) async {
+    final inputImage = InputImage.fromFile(image);
+    final labels = await _labeler.processImage(inputImage);
+    
+    String description = "Detectado: ";
+    int suggestedType = -1;
+
+    for (ImageLabel label in labels) {
+      final text = label.label.toLowerCase();
+      description += "${label.label} (${(label.confidence * 100).toStringAsFixed(0)}%), ";
+      
+      if (suggestedType == -1) {
+        if (text.contains('food') || text.contains('fruit') || text.contains('vegetable') || text.contains('plant')) {
+          suggestedType = 3; // Orgánico
+        } else if (text.contains('plastic') || text.contains('bottle') || text.contains('can') || text.contains('waste') || text.contains('trash')) {
+          suggestedType = 0; // Sólido
+        } else if (text.contains('liquid') || text.contains('water') || text.contains('oil')) {
+          suggestedType = 1; // Líquido
+        } else if (text.contains('chemical') || text.contains('battery')) {
+          suggestedType = 2; // Peligroso
+        }
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        if (suggestedType != -1) _selectedWasteType = suggestedType;
+        _descCtrl.text = description;
+      });
+    }
+  }
+
+  Future<void> _submitReport() async {
+    if (_selectedImage == null || _selectedWasteType == -1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, agregue una imagen y seleccione el tipo de residuo')),
+      );
+      return;
+    }
+
+    setState(() => _isUploading = true);
+
+    try {
+      final supabase = Supabase.instance.client;
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) return;
+
+      // 1. Upload image
+      final fileExt = _selectedImage!.path.split('.').last;
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+      final filePath = '$userId/$fileName';
+
+      await supabase.storage.from('reportes').upload(
+        filePath,
+        _selectedImage!,
+      );
+
+      final imageUrl = supabase.storage.from('reportes').getPublicUrl(filePath);
+
+      // 2. Insert record
+      final wasteTypes = ['SÓLIDO', 'LÍQUIDO', 'PELIGROSO', 'ORGÁNICO'];
+      
+      await supabase.from('reportes').insert({
+        'usuario_id': userId,
+        'imagen_url': imageUrl,
+        'tipo_residuo': wasteTypes[_selectedWasteType],
+        'descripcion': _descCtrl.text,
+        'prioridad': _priority,
+        'latitud': _currentPos.latitude,
+        'longitud': _currentPos.longitude,
+        'estado': 'PENDIENTE',
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Reporte enviado con éxito')),
+        );
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      debugPrint("Error submitting report: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al enviar el reporte')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
+    }
   }
 
   @override
@@ -120,51 +257,88 @@ class _ReportarScreenState extends State<ReportarScreen> {
             Column(
               children: [
                 const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 32),
-                  decoration: BoxDecoration(
-                    color: AppColors.bgLight,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.cloud_upload_outlined,
-                        size: 40,
-                        color: AppColors.primaryTeal,
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'Agregar Imagen',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'JPG, PNG (Max 10MB)',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.textLight,
-                        ),
-                      ),
-                    ],
+                GestureDetector(
+                  onTap: () => _pickImage(ImageSource.gallery),
+                  child: Container(
+                    width: double.infinity,
+                    height: 160,
+                    decoration: BoxDecoration(
+                      color: AppColors.bgLight,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.border),
+                      image: _selectedImage != null
+                          ? DecorationImage(
+                              image: FileImage(_selectedImage!),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                    ),
+                    child: _selectedImage == null
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.cloud_upload_outlined,
+                                size: 40,
+                                color: AppColors.primaryTeal,
+                              ),
+                              const SizedBox(height: 10),
+                              const Text(
+                                'Agregar Imagen',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'JPG, PNG (Max 10MB)',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.textLight,
+                                ),
+                              ),
+                            ],
+                          )
+                        : null,
                   ),
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () {},
+                    onPressed: () => _pickImage(ImageSource.camera),
                     icon: const Icon(Icons.camera_alt_outlined, size: 18),
                     label: const Text('Abrir Cámara'),
                   ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // PRIORIDAD (Added)
+          _phaseCard(
+            'EXTRA',
+            'Prioridad del Reporte',
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(value: 'BAJA', label: Text('Baja'), icon: Icon(Icons.low_priority)),
+                  ButtonSegment(value: 'MEDIA', label: Text('Media'), icon: Icon(Icons.priority_high)),
+                  ButtonSegment(value: 'ALTA', label: Text('Alta'), icon: Icon(Icons.error_outline)),
+                ],
+                selected: {_priority},
+                onSelectionChanged: (newSelection) {
+                  setState(() => _priority = newSelection.first);
+                },
+                style: SegmentedButton.styleFrom(
+                  selectedBackgroundColor: AppColors.primaryTeal,
+                  selectedForegroundColor: Colors.white,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -387,9 +561,15 @@ class _ReportarScreenState extends State<ReportarScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.send, size: 18),
-                    label: const Text('ENVIAR REPORTE AMBIENTAL'),
+                    onPressed: _isUploading ? null : _submitReport,
+                    icon: _isUploading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Icon(Icons.send, size: 18),
+                    label: Text(_isUploading ? 'ENVIANDO...' : 'ENVIAR REPORTE AMBIENTAL'),
                   ),
                 ),
               ],
