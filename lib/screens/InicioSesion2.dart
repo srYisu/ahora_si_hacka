@@ -23,10 +23,7 @@ class MiAppTecnica extends StatelessWidget {
     return MaterialApp(
       title: 'Technical Stewardship',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.light,
-        fontFamily: 'Segoe UI', // O la fuente que prefieras
-      ),
+      theme: ThemeData(brightness: Brightness.light, fontFamily: 'Segoe UI'),
       home: const InicioSesion2(),
     );
   }
@@ -52,7 +49,10 @@ class _InicioSesion2State extends State<InicioSesion2> {
 
   @override
   Widget build(BuildContext context) {
-    // Usamos LayoutBuilder para detectar el tamaño de la pantalla
+    // Detectamos el ancho de la pantalla para hacer el diseño responsivo
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isSmallScreen = screenWidth < 600;
+
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -72,7 +72,10 @@ class _InicioSesion2State extends State<InicioSesion2> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+              padding: EdgeInsets.symmetric(
+                horizontal: isSmallScreen ? 15 : 20,
+                vertical: 40,
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -100,11 +103,10 @@ class _InicioSesion2State extends State<InicioSesion2> {
 
                   // --- TARJETA RESPONSIVA ---
                   ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: 450,
-                    ), // Ancho máximo para escritorio
+                    constraints: const BoxConstraints(maxWidth: 450),
                     child: Container(
-                      padding: const EdgeInsets.all(40),
+                      // AQUÍ HACEMOS EL PADDING ADAPTABLE
+                      padding: EdgeInsets.all(isSmallScreen ? 25 : 40),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -125,7 +127,7 @@ class _InicioSesion2State extends State<InicioSesion2> {
                           const SizedBox(height: 8),
                           _buildTextField(
                             Icons.blur_on,
-                            "TS-000-0000",
+                            "correo@gmail.com",
                             controller: _emailController,
                           ),
                           const SizedBox(height: 25),
@@ -136,7 +138,7 @@ class _InicioSesion2State extends State<InicioSesion2> {
                           const SizedBox(height: 8),
                           _buildTextField(
                             Icons.shield_outlined,
-                            "••••••••",
+                            "••••••••••••",
                             obscure: true,
                             controller: _passwordController,
                           ),
@@ -167,20 +169,26 @@ class _InicioSesion2State extends State<InicioSesion2> {
     );
   }
 
-  // --- WIDGETS DE APOYO (Para limpiar el código principal) ---
+  // --- WIDGETS DE APOYO ---
 
   Widget _buildCardHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment
+          .start, // Alineamos arriba por si el texto baja de línea
       children: [
-        const Text(
-          'Terminal de Acceso',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
+        // EL EXPANDED PREVIENE EL DESBORDE DE LA PANTALLA
+        const Expanded(
+          child: Text(
+            'Terminal de Acceso',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
         ),
+        const SizedBox(width: 10), // Espacio de seguridad
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
@@ -188,6 +196,7 @@ class _InicioSesion2State extends State<InicioSesion2> {
             borderRadius: BorderRadius.circular(20),
           ),
           child: const Row(
+            mainAxisSize: MainAxisSize.min, // Evita que este Row se expanda
             children: [
               Icon(Icons.verified_user, size: 14, color: Color(0xFF00695C)),
               SizedBox(width: 5),
@@ -267,7 +276,7 @@ class _InicioSesion2State extends State<InicioSesion2> {
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         backgroundColor: color,
-        behavior: SnackBarBehavior.floating, // Hace el mensaje "aéreo"
+        behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.only(bottom: 30, left: 20, right: 20),
         elevation: 10,
@@ -293,7 +302,6 @@ class _InicioSesion2State extends State<InicioSesion2> {
             return;
           }
 
-          // Intentar iniciar sesión con Supabase
           try {
             _showFloatingMessage(
               context,
@@ -307,7 +315,6 @@ class _InicioSesion2State extends State<InicioSesion2> {
             );
 
             if (res.session != null && res.user != null) {
-              // Verificar si el usuario está en la tabla de organizaciones
               final userId = res.user!.id;
               final orgData = await Supabase.instance.client
                   .from('organizaciones')
@@ -318,7 +325,6 @@ class _InicioSesion2State extends State<InicioSesion2> {
               if (!mounted) return;
 
               if (orgData != null) {
-                // Es una entidad → Panel de entidades
                 _showFloatingMessage(
                   context,
                   '¡Acceso concedido! Redirigiendo al panel de entidades...',
@@ -328,7 +334,6 @@ class _InicioSesion2State extends State<InicioSesion2> {
                   MaterialPageRoute(builder: (_) => const EntidadesShell()),
                 );
               } else {
-                // Es un usuario común → Dashboard usuario
                 _showFloatingMessage(
                   context,
                   '¡Acceso concedido!',
@@ -386,13 +391,15 @@ class _InicioSesion2State extends State<InicioSesion2> {
             MaterialPageRoute(builder: (context) => const RegistroUsuarios()),
           );
         },
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
+        child: const Wrap(
+          // Cambiado a Wrap para que el texto baje si no cabe
+          crossAxisAlignment: WrapCrossAlignment.center,
+          alignment: WrapAlignment.center,
           children: [
             Icon(Icons.person_search, size: 16, color: Color(0xFF004D40)),
             SizedBox(width: 6),
             Text(
-              '¿no tienes cuenta? crea una aqui',
+              '¿No tienes cuenta? Crea una',
               style: TextStyle(
                 color: Color(0xFF004D40),
                 fontSize: 13,
@@ -417,6 +424,7 @@ class _InicioSesion2State extends State<InicioSesion2> {
           );
         },
         child: RichText(
+          textAlign: TextAlign.center, // Por si hace Wrap, que quede centrado
           text: TextSpan(
             text: '$normalText ',
             style: const TextStyle(color: Colors.grey, fontSize: 13),
@@ -436,29 +444,41 @@ class _InicioSesion2State extends State<InicioSesion2> {
   }
 
   Widget _buildSystemStatus() {
-    return const Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return const Wrap(
+      // Cambiado a Wrap para pantallas ultra pequeñas
+      alignment: WrapAlignment.center,
+      spacing: 25,
+      runSpacing: 10,
       children: [
-        Icon(Icons.sensors, size: 14, color: Colors.white54),
-        SizedBox(width: 5),
-        Text(
-          'EOS-17 ESTABLE',
-          style: TextStyle(
-            color: Colors.white54,
-            fontSize: 10,
-            fontWeight: FontWeight.w500,
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.sensors, size: 14, color: Colors.white54),
+            SizedBox(width: 5),
+            Text(
+              'EOS-17 ESTABLE',
+              style: TextStyle(
+                color: Colors.white54,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
-        SizedBox(width: 25),
-        Icon(Icons.dns, size: 14, color: Colors.white54),
-        SizedBox(width: 5),
-        Text(
-          'NODO: LDN-04',
-          style: TextStyle(
-            color: Colors.white54,
-            fontSize: 10,
-            fontWeight: FontWeight.w500,
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.dns, size: 14, color: Colors.white54),
+            SizedBox(width: 5),
+            Text(
+              'NODO: LDN-04',
+              style: TextStyle(
+                color: Colors.white54,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -467,18 +487,22 @@ class _InicioSesion2State extends State<InicioSesion2> {
   Widget _buildBottomLegal() {
     return Column(
       children: [
-        const Text(
-          '© 2026 ADMINISTRACIÓN TÉCNICA. MONITOREO AMBIENTAL DE PRECISIÓN.',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.white38,
-            fontSize: 9,
-            letterSpacing: 0.5,
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            '© 2026 ADMINISTRACIÓN TÉCNICA. MONITOREO AMBIENTAL DE PRECISIÓN.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white38,
+              fontSize: 9,
+              letterSpacing: 0.5,
+            ),
           ),
         ),
         const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        Wrap(
+          // Wrap para que los enlaces legales no choquen en móviles estrechos
+          alignment: WrapAlignment.center,
           children: [
             _legalText('POLÍTICA DE PRIVACIDAD'),
             const Padding(
