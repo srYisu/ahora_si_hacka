@@ -1,32 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Supabase.initialize(
-    url: 'https://bhceqzmvnlepsynaxcqx.supabase.co',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoY2Vxem12bmxlcHN5bmF4Y3F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjAwMzQsImV4cCI6MjA5MDAzNjAzNH0.U_D2N9fXWTR1EDbmhbkEkyrKxlf1xsCE4FHota6ZrqU',
-  );
-  runApp(const MiAppTecnica());
-}
-
-class MiAppTecnica extends StatelessWidget {
-  const MiAppTecnica({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Technical Stewardship',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.light,
-        fontFamily: 'Segoe UI', // O la fuente que prefieras
-      ),
-      home: const InicioSesion2(),
-    );
-  }
-}
+import 'entidades/entidades_shell.dart';
+import 'dashboard_shell.dart';
 
 class InicioSesion2 extends StatefulWidget {
   const InicioSesion2({super.key});
@@ -289,70 +264,6 @@ class _InicioSesion2State extends State<InicioSesion2> {
             return;
           }
 
-          // Validación de correo: formato correcto, min 3 caracteres antes del @ y dominio válido
-          final emailParts = email.split('@');
-          if (emailParts.length != 2) {
-            _showFloatingMessage(
-              context,
-              'Correo inválido (formato incorrecto)',
-              Colors.orange,
-            );
-            return;
-          }
-
-          final userPart = emailParts[0];
-          final domainPart = emailParts[1].toLowerCase();
-
-          if (userPart.length < 3) {
-            _showFloatingMessage(
-              context,
-              'El correo requiere al menos 3 letras antes del "@"',
-              Colors.orange,
-            );
-            return;
-          }
-
-          final validDomains = [
-            'gmail.com',
-            'hotmail.com',
-            'outlook.com',
-            'yahoo.com',
-            'live.com',
-            'icloud.com',
-          ];
-
-          if (!validDomains.contains(domainPart)) {
-            _showFloatingMessage(
-              context,
-              'Dominio "$domainPart" no admitido',
-              Colors.orange,
-            );
-            return;
-          }
-
-          // Validación de contraseña: mayor a 5 caracteres
-          if (password.length <= 5) {
-            _showFloatingMessage(
-              context,
-              'La contraseña debe tener más de 5 caracteres',
-              Colors.orange,
-            );
-            return;
-          }
-
-          // Validación de contraseña: texto, número y signos comunes
-          final RegExp passwordRegExp = RegExp(
-            r'^[a-zA-Z0-9@#\$%\^&\*\-\_\.\+]+$',
-          );
-          if (!passwordRegExp.hasMatch(password)) {
-            _showFloatingMessage(
-              context,
-              'Contraseña con caracteres no permitidos',
-              Colors.orange,
-            );
-            return;
-          }
-
           // Intentar iniciar sesión con Supabase
           try {
             _showFloatingMessage(
@@ -366,13 +277,38 @@ class _InicioSesion2State extends State<InicioSesion2> {
               password: password,
             );
 
-            if (res.session != null) {
-              _showFloatingMessage(
-                context,
-                '¡Acceso concedido, Conservador!',
-                const Color(0xFF004D40),
-              );
-              // TODO: Redirigir a tu nueva pantalla aquí usando Navigator
+            if (res.session != null && res.user != null) {
+              // Verificar si el usuario está en la tabla de organizaciones
+              final userId = res.user!.id;
+              final orgData = await Supabase.instance.client
+                  .from('organizaciones')
+                  .select()
+                  .eq('auth_user_id', userId)
+                  .maybeSingle();
+
+              if (!mounted) return;
+
+              if (orgData != null) {
+                // Es una entidad → Panel de entidades
+                _showFloatingMessage(
+                  context,
+                  '¡Acceso concedido! Redirigiendo al panel de entidades...',
+                  const Color(0xFF004D40),
+                );
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => const EntidadesShell()),
+                );
+              } else {
+                // Es un usuario común → Dashboard usuario
+                _showFloatingMessage(
+                  context,
+                  '¡Acceso concedido!',
+                  const Color(0xFF004D40),
+                );
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => const DashboardShell()),
+                );
+              }
             }
           } on AuthException catch (e) {
             _showFloatingMessage(
