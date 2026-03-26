@@ -4,7 +4,6 @@ import 'usuario/impacto_screen.dart';
 import 'usuario/mapa_screen.dart';
 import 'usuario/reportar_screen.dart';
 import 'usuario/mis_reportes_screen.dart';
-import 'usuario/notificaciones_screen.dart';
 import 'usuario/perfil_screen.dart';
 
 class DashboardShell extends StatefulWidget {
@@ -22,7 +21,6 @@ class _DashboardShellState extends State<DashboardShell> {
     MapaScreen(),
     ReportarScreen(),
     MisReportesScreen(),
-    NotificacionesScreen(),
     PerfilScreen(),
   ];
 
@@ -31,7 +29,6 @@ class _DashboardShellState extends State<DashboardShell> {
     (icon: Icons.map_outlined, label: 'Mapa'),
     (icon: Icons.add_circle_outline, label: 'Reportar'),
     (icon: Icons.checklist_rounded, label: 'Reportes'),
-    (icon: Icons.notifications_outlined, label: 'Alertas'),
     (icon: Icons.person_outline, label: 'Perfil'),
   ];
 

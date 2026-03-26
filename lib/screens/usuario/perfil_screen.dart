@@ -1,11 +1,86 @@
-import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/app_theme.dart';
+import '../InicioSesion2.dart';
+import 'package:flutter/material.dart';
 
-class PerfilScreen extends StatelessWidget {
+class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
 
   @override
+  State<PerfilScreen> createState() => _PerfilScreenState();
+}
+
+class _PerfilScreenState extends State<PerfilScreen> {
+  final _supabase = Supabase.instance.client;
+  User? _user;
+  int _totalReports = 0;
+  int _resolvedReports = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user != null) {
+        setState(() => _user = user);
+
+        // Cargar estadísticas
+        final reportsResponse = await _supabase
+            .from('reportes')
+            .select('id')
+            .eq('usuario_id', user.id);
+
+        final resolvedResponse = await _supabase
+            .from('reportes')
+            .select('id')
+            .eq('usuario_id', user.id)
+            .eq('estado', 'VALIDADO');
+
+        if (mounted) {
+          setState(() {
+            _totalReports = (reportsResponse as List).length;
+            _resolvedReports = (resolvedResponse as List).length;
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error loading profile: $e");
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _signOut() async {
+    try {
+      await _supabase.auth.signOut();
+      if (mounted) {
+        // Redirigir al inicio de sesión usando MaterialPageRoute ya que no hay rutas nombradas
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const InicioSesion2()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      debugPrint("Error signing out: $e");
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primaryTeal),
+      );
+    }
+
+    final String name = _user?.userMetadata?['full_name'] ?? 'Usuario EcoAlert';
+    final String email = _user?.email ?? 'correo@ejemplo.com';
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
       child: Column(
@@ -44,9 +119,7 @@ class PerfilScreen extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 40,
-                  backgroundColor: AppColors.primaryTeal.withValues(
-                    alpha: 0.15,
-                  ),
+                  backgroundColor: AppColors.primaryTeal.withOpacity(0.15),
                   child: const Icon(
                     Icons.person,
                     size: 40,
@@ -54,9 +127,9 @@ class PerfilScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 14),
-                const Text(
-                  'Alex Rivero',
-                  style: TextStyle(
+                Text(
+                  name,
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
@@ -64,41 +137,19 @@ class PerfilScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'alex.rivero@conservator.mx',
+                  email,
                   style: TextStyle(
                     fontSize: 13,
                     color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryTeal.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'CONSERVADOR NIVEL 4',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primaryTeal,
-                      letterSpacing: 1,
-                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _statBox('Reportes', '47'),
+                    _statBox('Reportes', _totalReports.toString()),
                     const SizedBox(width: 12),
-                    _statBox('Resueltos', '39'),
-                    const SizedBox(width: 12),
-                    _statBox('Días', '156'),
+                    _statBox('Resueltos', _resolvedReports.toString()),
                   ],
                 ),
               ],
@@ -108,25 +159,15 @@ class PerfilScreen extends StatelessWidget {
 
           // Info Personal
           _section('Información Personal', [
-            _row(Icons.person_outline, 'Nombre', 'Alex Rivero'),
-            _row(Icons.email_outlined, 'Email', 'alex.rivero@conservator.mx'),
-            _row(Icons.phone_outlined, 'Teléfono', '+52 55 1234 5678'),
-            _row(Icons.location_on_outlined, 'Zona', 'Sector Norte - CDMX'),
+            _row(Icons.person_outline, 'Nombre', name),
+            _row(Icons.email_outlined, 'Email', email),
           ]),
-          const SizedBox(height: 12),
-
-          // Preferencias
-          _section('Preferencias', [
-            _row(Icons.notifications_outlined, 'Notificaciones', 'Activadas'),
-            _row(Icons.language, 'Idioma', 'Español'),
-            _row(Icons.dark_mode_outlined, 'Tema', 'Claro'),
-          ]),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () {},
+              onPressed: _signOut,
               icon: const Icon(Icons.logout, size: 18),
               label: const Text('Cerrar Sesión'),
               style: OutlinedButton.styleFrom(
@@ -144,8 +185,8 @@ class PerfilScreen extends StatelessWidget {
     );
   }
 
-  static Widget _statBox(String label, String value) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+  Widget _statBox(String label, String value) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
     decoration: BoxDecoration(
       color: AppColors.bgMint,
       borderRadius: BorderRadius.circular(12),
@@ -173,7 +214,7 @@ class PerfilScreen extends StatelessWidget {
     ),
   );
 
-  static Widget _section(String title, List<Widget> items) => Container(
+  Widget _section(String title, List<Widget> items) => Container(
     width: double.infinity,
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
@@ -198,7 +239,7 @@ class PerfilScreen extends StatelessWidget {
     ),
   );
 
-  static Widget _row(IconData icon, String label, String value) => Padding(
+  Widget _row(IconData icon, String label, String value) => Padding(
     padding: const EdgeInsets.only(bottom: 12),
     child: Row(
       children: [
@@ -223,6 +264,7 @@ class PerfilScreen extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
             textAlign: TextAlign.end,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
