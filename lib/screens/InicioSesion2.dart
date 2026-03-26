@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/app_theme.dart';
 import 'entidades/entidades_shell.dart';
 import 'dashboard_shell.dart';
+import 'trabajador_shell.dart';
 import 'RegistroUsuarios.dart';
 import 'RegistroOrganizacion.dart';
 
@@ -21,9 +23,9 @@ class MiAppTecnica extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Technical Stewardship',
+      title: 'EcoAlert',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(brightness: Brightness.light, fontFamily: 'Segoe UI'),
+      theme: AppTheme.lightTheme,
       home: const InicioSesion2(),
     );
   }
@@ -37,129 +39,134 @@ class InicioSesion2 extends StatefulWidget {
 }
 
 class _InicioSesion2State extends State<InicioSesion2> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
     super.dispose();
+  }
+
+  void _msg(String text, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(text, style: const TextStyle(fontWeight: FontWeight.w600)), backgroundColor: color, behavior: SnackBarBehavior.floating),
+    );
+  }
+
+  Future<void> _handleLogin() async {
+    final email = _emailCtrl.text.trim();
+    final password = _passwordCtrl.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _msg('Ingrese sus credenciales', Colors.orange);
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final supabase = Supabase.instance.client;
+      final res = await supabase.auth.signInWithPassword(email: email, password: password);
+
+      if (res.session != null && res.user != null) {
+        final userId = res.user!.id;
+
+        // 1. ¿Es una organización/entidad?
+        final orgData = await supabase.from('organizaciones').select('id').eq('auth_user_id', userId).maybeSingle();
+        if (!mounted) return;
+        if (orgData != null) {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const EntidadesShell()));
+          return;
+        }
+
+        // 2. ¿Es un ayudante/trabajador (persona de apoyo)?
+        final ayudanteData = await supabase.from('personas_apoyo').select('id').eq('id', userId).maybeSingle();
+        if (!mounted) return;
+        if (ayudanteData != null) {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const TrabajadorShell()));
+          return;
+        }
+
+        // 3. Usuario común
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const DashboardShell()));
+      }
+    } on AuthException catch (e) {
+      _msg('Denegado: ${e.message}', AppColors.danger);
+    } catch (e) {
+      _msg('Error de conexión: $e', AppColors.danger);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Detectamos el ancho de la pantalla para hacer el diseño responsivo
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final bool isSmallScreen = screenWidth < 600;
-
     return Scaffold(
       body: Container(
-        width: double.infinity,
-        height: double.infinity,
+        width: double.infinity, height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF1D3E3B),
-              Color(0xFF2D5A56),
-              Color(0xFF5A8F89),
-              Color(0xFF3B6B66),
-            ],
+            begin: Alignment.topLeft, end: Alignment.bottomRight,
+            colors: [AppColors.primaryDark, AppColors.primary, Color(0xFF00695C)],
           ),
         ),
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: isSmallScreen ? 15 : 20,
-                vertical: 40,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // --- CABECERA ---
-                  const Text(
-                    'Administración Técnica',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  const Text(
-                    'EL CONSERVADOR DE PRECISIÓN',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                      letterSpacing: 4,
-                    ),
-                  ),
-                  const SizedBox(height: 40),
+                  const Icon(Icons.eco_rounded, size: 80, color: AppColors.secondary),
+                  const SizedBox(height: 16),
+                  const Text('ECOALERT', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900, letterSpacing: 4)),
+                  const Text('SISTEMA DE MONITOREO AMBIENTAL', style: TextStyle(color: AppColors.secondary, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 2)),
+                  const SizedBox(height: 48),
 
-                  // --- TARJETA RESPONSIVA ---
                   ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 450),
+                    constraints: const BoxConstraints(maxWidth: 420),
                     child: Container(
-                      // AQUÍ HACEMOS EL PADDING ADAPTABLE
-                      padding: EdgeInsets.all(isSmallScreen ? 25 : 40),
+                      padding: const EdgeInsets.all(28),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
-                            blurRadius: 30,
-                            offset: const Offset(0, 15),
-                          ),
-                        ],
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10))],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildCardHeader(),
-                          const SizedBox(height: 30),
-                          _buildLabel("CORREO ELECTRÓNICO"),
-                          const SizedBox(height: 8),
-                          _buildTextField(
-                            Icons.blur_on,
-                            "correo@gmail.com",
-                            controller: _emailController,
+                          const Text('Iniciar Sesión', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.primaryDark)),
+                          const SizedBox(height: 6),
+                          const Text('Acceda a su terminal operativa', style: TextStyle(fontSize: 13, color: AppColors.textLight)),
+                          const SizedBox(height: 32),
+                          _field(Icons.alternate_email_rounded, 'CORREO ELECTRÓNICO', _emailCtrl),
+                          const SizedBox(height: 20),
+                          _field(Icons.lock_outline_rounded, 'CONTRASEÑA', _passwordCtrl, obscure: true),
+                          const SizedBox(height: 32),
+                          SizedBox(
+                            width: double.infinity, height: 55,
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _handleLogin,
+                              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                              child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('ENTRAR AL SISTEMA', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
+                            ),
                           ),
-                          const SizedBox(height: 25),
-                          _buildLabelWithAction(
-                            "CONTRASEÑA",
-                            "¿Olvidó su contraseña?",
-                          ),
-                          const SizedBox(height: 8),
-                          _buildTextField(
-                            Icons.shield_outlined,
-                            "••••••••••••",
-                            obscure: true,
-                            controller: _passwordController,
-                          ),
-                          const SizedBox(height: 35),
-                          _buildLoginButton(context),
-                          const SizedBox(height: 35),
-                          _buildVisitorLink(),
-                          const SizedBox(height: 15),
-                          _buildFooterLink(
-                            "¿Nueva Institución?",
-                            "Registrarse",
-                          ),
+                          const SizedBox(height: 24),
+                          Center(child: TextButton(
+                            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegistroUsuarios())),
+                            child: const Text('¿No tienes cuenta? Regístrate', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                          )),
+                          Center(child: TextButton(
+                            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegistroOrganizacion())),
+                            child: const Text('Registrar Institución / Organización', style: TextStyle(fontSize: 11, color: AppColors.textLight)),
+                          )),
                         ],
                       ),
                     ),
                   ),
-
-                  const SizedBox(height: 50),
-                  _buildSystemStatus(),
-                  const SizedBox(height: 20),
-                  _buildBottomLegal(),
                 ],
               ),
             ),
@@ -169,361 +176,20 @@ class _InicioSesion2State extends State<InicioSesion2> {
     );
   }
 
-  // --- WIDGETS DE APOYO ---
-
-  Widget _buildCardHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment
-          .start, // Alineamos arriba por si el texto baja de línea
-      children: [
-        // EL EXPANDED PREVIENE EL DESBORDE DE LA PANTALLA
-        const Expanded(
-          child: Text(
-            'Terminal de Acceso',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-        ),
-        const SizedBox(width: 10), // Espacio de seguridad
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: const Color(0xFFB2DFDB),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min, // Evita que este Row se expanda
-            children: [
-              Icon(Icons.verified_user, size: 14, color: Color(0xFF00695C)),
-              SizedBox(width: 5),
-              Text(
-                'ACCESO SEGURO',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF00695C),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.bold,
-        color: Colors.grey,
-      ),
-    );
-  }
-
-  Widget _buildLabelWithAction(String label, String action) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _buildLabel(label),
-        GestureDetector(
-          onTap: () {},
-          child: Text(
-            action,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Colors.black54,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextField(
-    IconData icon,
-    String hint, {
-    bool obscure = false,
-    TextEditingController? controller,
-  }) {
-    return TextField(
-      controller: controller,
-      obscureText: obscure,
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: const Color(0xFFF1F4F8),
-        hintText: hint,
-        prefixIcon: Icon(icon, color: Colors.grey, size: 20),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide.none,
+  Widget _field(IconData icon, String label, TextEditingController ctrl, {bool obscure = false}) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.primary, letterSpacing: 1)),
+      const SizedBox(height: 8),
+      TextField(
+        controller: ctrl, obscureText: obscure,
+        decoration: InputDecoration(
+          prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
+          filled: true, fillColor: AppColors.bgMint,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          contentPadding: const EdgeInsets.symmetric(vertical: 16),
         ),
       ),
-    );
-  }
-
-  void _showFloatingMessage(BuildContext context, String text, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          text,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.only(bottom: 30, left: 20, right: 20),
-        elevation: 10,
-      ),
-    );
-  }
-
-  Widget _buildLoginButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 55,
-      child: ElevatedButton(
-        onPressed: () async {
-          final email = _emailController.text.trim();
-          final password = _passwordController.text.trim();
-
-          if (email.isEmpty || password.isEmpty) {
-            _showFloatingMessage(
-              context,
-              'Por favor, ingrese correo y contraseña',
-              Colors.redAccent,
-            );
-            return;
-          }
-
-          try {
-            _showFloatingMessage(
-              context,
-              'Autenticando operativos...',
-              Colors.blueGrey,
-            );
-
-            final res = await Supabase.instance.client.auth.signInWithPassword(
-              email: email,
-              password: password,
-            );
-
-            if (res.session != null && res.user != null) {
-              final userId = res.user!.id;
-              final orgData = await Supabase.instance.client
-                  .from('organizaciones')
-                  .select()
-                  .eq('auth_user_id', userId)
-                  .maybeSingle();
-
-              if (!mounted) return;
-
-              if (orgData != null) {
-                _showFloatingMessage(
-                  context,
-                  '¡Acceso concedido! Redirigiendo al panel de entidades...',
-                  const Color(0xFF004D40),
-                );
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const EntidadesShell()),
-                );
-              } else {
-                _showFloatingMessage(
-                  context,
-                  '¡Acceso concedido!',
-                  const Color(0xFF004D40),
-                );
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const DashboardShell()),
-                );
-              }
-            }
-          } on AuthException catch (e) {
-            _showFloatingMessage(
-              context,
-              'Denegado: ${e.message}',
-              Colors.redAccent,
-            );
-          } catch (e) {
-            _showFloatingMessage(
-              context,
-              'Error en el enlace: $e',
-              Colors.redAccent,
-            );
-          }
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF004D40),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          elevation: 0,
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Iniciar Sesión',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            SizedBox(width: 10),
-            Icon(Icons.arrow_forward, color: Colors.white, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVisitorLink() {
-    return Center(
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const RegistroUsuarios()),
-          );
-        },
-        child: const Wrap(
-          // Cambiado a Wrap para que el texto baje si no cabe
-          crossAxisAlignment: WrapCrossAlignment.center,
-          alignment: WrapAlignment.center,
-          children: [
-            Icon(Icons.person_search, size: 16, color: Color(0xFF004D40)),
-            SizedBox(width: 6),
-            Text(
-              '¿No tienes cuenta? Crea una',
-              style: TextStyle(
-                color: Color(0xFF004D40),
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFooterLink(String normalText, String boldText) {
-    return Center(
-      child: GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const RegistroOrganizacion(),
-            ),
-          );
-        },
-        child: RichText(
-          textAlign: TextAlign.center, // Por si hace Wrap, que quede centrado
-          text: TextSpan(
-            text: '$normalText ',
-            style: const TextStyle(color: Colors.grey, fontSize: 13),
-            children: [
-              TextSpan(
-                text: boldText,
-                style: const TextStyle(
-                  color: Colors.black87,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSystemStatus() {
-    return const Wrap(
-      // Cambiado a Wrap para pantallas ultra pequeñas
-      alignment: WrapAlignment.center,
-      spacing: 25,
-      runSpacing: 10,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.sensors, size: 14, color: Colors.white54),
-            SizedBox(width: 5),
-            Text(
-              'EOS-17 ESTABLE',
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.dns, size: 14, color: Colors.white54),
-            SizedBox(width: 5),
-            Text(
-              'NODO: LDN-04',
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBottomLegal() {
-    return Column(
-      children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            '© 2026 ADMINISTRACIÓN TÉCNICA. MONITOREO AMBIENTAL DE PRECISIÓN.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white38,
-              fontSize: 9,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Wrap(
-          // Wrap para que los enlaces legales no choquen en móviles estrechos
-          alignment: WrapAlignment.center,
-          children: [
-            _legalText('POLÍTICA DE PRIVACIDAD'),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              child: Text('•', style: TextStyle(color: Colors.white38)),
-            ),
-            _legalText('ESTADO DEL SISTEMA'),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _legalText(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        color: Colors.white38,
-        fontSize: 9,
-        fontWeight: FontWeight.w600,
-      ),
-    );
-  }
+    ],
+  );
 }

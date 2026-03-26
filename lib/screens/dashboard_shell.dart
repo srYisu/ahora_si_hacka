@@ -35,14 +35,13 @@ class _DashboardShellState extends State<DashboardShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: _screens),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: AppColors.bgCard,
-          border: Border(top: BorderSide(color: AppColors.borderLight, width: 1)),
+          border: Border(
+            top: BorderSide(color: AppColors.borderLight, width: 1),
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -67,7 +66,9 @@ class _DashboardShellState extends State<DashboardShell> {
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(vertical: 6),
                       decoration: BoxDecoration(
-                        color: selected ? AppColors.primaryTeal.withValues(alpha: 0.1) : Colors.transparent,
+                        color: selected
+                            ? AppColors.primaryTeal.withValues(alpha: 0.1)
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
@@ -76,15 +77,21 @@ class _DashboardShellState extends State<DashboardShell> {
                           Icon(
                             item.icon,
                             size: 22,
-                            color: selected ? AppColors.primaryTeal : AppColors.textLight,
+                            color: selected
+                                ? AppColors.primaryTeal
+                                : AppColors.textLight,
                           ),
                           const SizedBox(height: 3),
                           Text(
                             item.label,
                             style: TextStyle(
                               fontSize: 10,
-                              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                              color: selected ? AppColors.primaryTeal : AppColors.textLight,
+                              fontWeight: selected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: selected
+                                  ? AppColors.primaryTeal
+                                  : AppColors.textLight,
                             ),
                           ),
                         ],

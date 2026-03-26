@@ -22,7 +22,7 @@ class _ReportarScreenState extends State<ReportarScreen> {
   File? _selectedImage;
   bool _isUploading = false;
   String _priority = 'MEDIA';
-  
+
   // ML Kit setup
   late ImageLabeler _labeler;
 
@@ -37,7 +37,9 @@ class _ReportarScreenState extends State<ReportarScreen> {
   @override
   void initState() {
     super.initState();
-    _labeler = ImageLabeler(options: ImageLabelerOptions(confidenceThreshold: 0.5));
+    _labeler = ImageLabeler(
+      options: ImageLabelerOptions(confidenceThreshold: 0.5),
+    );
     _initLocation();
   }
 
@@ -66,7 +68,7 @@ class _ReportarScreenState extends State<ReportarScreen> {
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.best,
       );
-      
+
       if (mounted) {
         final newPos = LatLng(position.latitude, position.longitude);
         setState(() {
@@ -108,7 +110,7 @@ class _ReportarScreenState extends State<ReportarScreen> {
           final city = addr['city'] ?? addr['town'] ?? addr['village'] ?? '';
           _currentAddress = "$road $houseNumber, $city".trim();
           if (_currentAddress == ',' || _currentAddress.isEmpty) {
-              _currentAddress = data['display_name'] ?? 'Ubicación desconocida';
+            _currentAddress = data['display_name'] ?? 'Ubicación desconocida';
           }
         });
       }
@@ -147,23 +149,61 @@ class _ReportarScreenState extends State<ReportarScreen> {
   Future<void> _analyzeImageWithAI(File image) async {
     final inputImage = InputImage.fromFile(image);
     final labels = await _labeler.processImage(inputImage);
-    
+
     String description = "Detectado: ";
     int suggestedType = -1;
 
     for (ImageLabel label in labels) {
       final text = label.label.toLowerCase();
-      description += "${label.label} (${(label.confidence * 100).toStringAsFixed(0)}%), ";
-      
+      description +=
+          "${label.label} (${(label.confidence * 100).toStringAsFixed(0)}%), ";
+
       if (suggestedType == -1) {
         // AI Logic based on ML Kit labels
-        if (_hasMatch(text, ['food', 'fruit', 'vegetable', 'plant', 'organism', 'leaf', 'wood', 'grass', 'compost', 'seed'])) {
+        if (_hasMatch(text, [
+          'food',
+          'fruit',
+          'vegetable',
+          'plant',
+          'organism',
+          'leaf',
+          'wood',
+          'grass',
+        ])) {
           suggestedType = 3; // Orgánico
-        } else if (_hasMatch(text, ['plastic', 'bottle', 'can', 'waste', 'trash', 'paper', 'metal', 'glass', 'garbage', 'debris', 'tin', 'box', 'aluminum', 'gadget', 'device', 'electronic'])) {
+        } else if (_hasMatch(text, [
+          'plastic',
+          'bottle',
+          'can',
+          'waste',
+          'trash',
+          'paper',
+          'metal',
+          'glass',
+          'garbage',
+          'debris',
+          'tin',
+        ])) {
           suggestedType = 0; // Sólido
-        } else if (_hasMatch(text, ['liquid', 'water', 'oil', 'fluid', 'beverage', 'gasoline', 'paint', 'cleaning'])) {
+        } else if (_hasMatch(text, [
+          'liquid',
+          'water',
+          'oil',
+          'fluid',
+          'beverage',
+          'gasoline',
+        ])) {
           suggestedType = 1; // Líquido
-        } else if (_hasMatch(text, ['chemical', 'battery', 'drug', 'hazard', 'toxic', 'poison', 'medicine', 'explosion', 'cell', 'accumulator', 'powerbank', 'nuclear', 'acid'])) {
+        } else if (_hasMatch(text, [
+          'chemical',
+          'battery',
+          'drug',
+          'hazard',
+          'toxic',
+          'poison',
+          'medicine',
+          'explosion',
+        ])) {
           suggestedType = 2; // Peligroso
         }
       }
@@ -180,7 +220,11 @@ class _ReportarScreenState extends State<ReportarScreen> {
   Future<void> _submitReport() async {
     if (_selectedImage == null || _selectedWasteType == -1) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, agregue una imagen y seleccione el tipo de residuo')),
+        const SnackBar(
+          content: Text(
+            'Por favor, agregue una imagen y seleccione el tipo de residuo',
+          ),
+        ),
       );
       return;
     }
@@ -197,16 +241,13 @@ class _ReportarScreenState extends State<ReportarScreen> {
       final fileName = '${DateTime.now().millisecondsSinceEpoch}.$fileExt';
       final filePath = '$userId/$fileName';
 
-      await supabase.storage.from('reportes').upload(
-        filePath,
-        _selectedImage!,
-      );
+      await supabase.storage.from('reportes').upload(filePath, _selectedImage!);
 
       final imageUrl = supabase.storage.from('reportes').getPublicUrl(filePath);
 
       // 2. Insert record
       final wasteTypes = ['SÓLIDO', 'LÍQUIDO', 'PELIGROSO', 'ORGÁNICO'];
-      
+
       await supabase.from('reportes').insert({
         'usuario_id': userId,
         'imagen_url': imageUrl,
@@ -354,9 +395,21 @@ class _ReportarScreenState extends State<ReportarScreen> {
               padding: const EdgeInsets.only(top: 12),
               child: SegmentedButton<String>(
                 segments: const [
-                  ButtonSegment(value: 'BAJA', label: Text('Baja'), icon: Icon(Icons.low_priority)),
-                  ButtonSegment(value: 'MEDIA', label: Text('Media'), icon: Icon(Icons.priority_high)),
-                  ButtonSegment(value: 'ALTA', label: Text('Alta'), icon: Icon(Icons.error_outline)),
+                  ButtonSegment(
+                    value: 'BAJA',
+                    label: Text('Baja'),
+                    icon: Icon(Icons.low_priority),
+                  ),
+                  ButtonSegment(
+                    value: 'MEDIA',
+                    label: Text('Media'),
+                    icon: Icon(Icons.priority_high),
+                  ),
+                  ButtonSegment(
+                    value: 'ALTA',
+                    label: Text('Alta'),
+                    icon: Icon(Icons.error_outline),
+                  ),
                 ],
                 selected: {_priority},
                 onSelectionChanged: (newSelection) {
@@ -439,14 +492,16 @@ class _ReportarScreenState extends State<ReportarScreen> {
                             initialCenter: _currentPos,
                             initialZoom: 14,
                             onMapEvent: (event) {
-                              if (event is MapEventMoveEnd && event.source != MapEventSource.custom) {
+                              if (event is MapEventMoveEnd &&
+                                  event.source != MapEventSource.custom) {
                                 _updateAddressFromMap(event.camera.center);
                               }
                             },
                           ),
                           children: [
                             TileLayer(
-                              urlTemplate: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                              urlTemplate:
+                                  'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
                               subdomains: const ['a', 'b', 'c', 'd'],
                             ),
                           ],
@@ -454,7 +509,11 @@ class _ReportarScreenState extends State<ReportarScreen> {
                         const Center(
                           child: Padding(
                             padding: EdgeInsets.only(bottom: 35),
-                            child: Icon(Icons.location_on, color: AppColors.danger, size: 40),
+                            child: Icon(
+                              Icons.location_on,
+                              color: AppColors.danger,
+                              size: 40,
+                            ),
                           ),
                         ),
                         if (_isSearching)
@@ -466,12 +525,20 @@ class _ReportarScreenState extends State<ReportarScreen> {
                               decoration: const BoxDecoration(
                                 color: Colors.white,
                                 shape: BoxShape.circle,
-                                boxShadow: [BoxShadow(blurRadius: 5, color: Colors.black12)],
+                                boxShadow: [
+                                  BoxShadow(
+                                    blurRadius: 5,
+                                    color: Colors.black12,
+                                  ),
+                                ],
                               ),
                               child: const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryTeal),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.primaryTeal,
+                                ),
                               ),
                             ),
                           ),
@@ -594,10 +661,15 @@ class _ReportarScreenState extends State<ReportarScreen> {
                         ? const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : const Icon(Icons.send, size: 18),
-                    label: Text(_isUploading ? 'ENVIANDO...' : 'ENVIAR REPORTE AMBIENTAL'),
+                    label: Text(
+                      _isUploading ? 'ENVIANDO...' : 'ENVIAR REPORTE AMBIENTAL',
+                    ),
                   ),
                 ),
               ],
@@ -671,24 +743,46 @@ class _ReportarScreenState extends State<ReportarScreen> {
   Widget _gpsBadgeStatus() => Container(
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
     decoration: BoxDecoration(
-      color: _currentLocation != null ? AppColors.primaryGreen : Colors.orange, 
+      color: _currentLocation != null ? AppColors.primaryGreen : Colors.orange,
       borderRadius: BorderRadius.circular(20),
-      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4)]
+      boxShadow: [
+        BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4),
+      ],
     ),
     child: Row(
-      mainAxisSize: MainAxisSize.min, 
+      mainAxisSize: MainAxisSize.min,
       children: [
         if (_isLoadingLocation)
-          const SizedBox(width: 8, height: 8, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+          const SizedBox(
+            width: 8,
+            height: 8,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.white,
+            ),
+          )
         else
-          Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
-        
+          Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+          ),
+
         const SizedBox(width: 6),
         Text(
-          _isLoadingLocation ? 'BUSCANDO GPS...' : (_currentLocation != null ? 'GPS ACTIVO' : 'SIN GPS'), 
-          style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white)
+          _isLoadingLocation
+              ? 'BUSCANDO GPS...'
+              : (_currentLocation != null ? 'GPS ACTIVO' : 'SIN GPS'),
+          style: const TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
         ),
-      ]
+      ],
     ),
   );
 

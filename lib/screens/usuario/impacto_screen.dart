@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../core/app_theme.dart';
 import '../../widgets/stat_card.dart';
 
+
 class ImpactoScreen extends StatelessWidget {
   const ImpactoScreen({super.key});
 

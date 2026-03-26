@@ -77,7 +77,9 @@ class _MisReportesScreenState extends State<MisReportesScreen> {
                 return const Center(
                   child: Padding(
                     padding: EdgeInsets.all(32.0),
-                    child: CircularProgressIndicator(color: AppColors.primaryTeal),
+                    child: CircularProgressIndicator(
+                      color: AppColors.primaryTeal,
+                    ),
                   ),
                 );
               }
@@ -99,7 +101,11 @@ class _MisReportesScreenState extends State<MisReportesScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 40),
                     child: Column(
                       children: [
-                        Icon(Icons.assignment_outlined, size: 48, color: AppColors.textLight.withValues(alpha: 0.3)),
+                        Icon(
+                          Icons.assignment_outlined,
+                          size: 48,
+                          color: AppColors.textLight.withValues(alpha: 0.3),
+                        ),
                         const SizedBox(height: 12),
                         const Text(
                           'No hay reportes que coincidan.',
@@ -134,7 +140,9 @@ class _MisReportesScreenState extends State<MisReportesScreen> {
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primaryTeal : AppColors.bgCard,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: isSelected ? AppColors.primaryTeal : AppColors.border),
+          border: Border.all(
+            color: isSelected ? AppColors.primaryTeal : AppColors.border,
+          ),
         ),
         child: Text(
           label,
@@ -203,9 +211,17 @@ class _MisReportesScreenState extends State<MisReportesScreen> {
                   ? Image.network(
                       r['imagen_url'],
                       fit: BoxFit.cover,
-                      errorBuilder: (c, e, s) => const Icon(Icons.broken_image, size: 24, color: AppColors.textLight),
+                      errorBuilder: (c, e, s) => const Icon(
+                        Icons.broken_image,
+                        size: 24,
+                        color: AppColors.textLight,
+                      ),
                     )
-                  : const Icon(Icons.image, size: 24, color: AppColors.textLight),
+                  : const Icon(
+                      Icons.image,
+                      size: 24,
+                      color: AppColors.textLight,
+                    ),
             ),
           ),
           const SizedBox(width: 12),
@@ -227,7 +243,10 @@ class _MisReportesScreenState extends State<MisReportesScreen> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
@@ -248,7 +267,10 @@ class _MisReportesScreenState extends State<MisReportesScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.bgMint,
                         borderRadius: BorderRadius.circular(4),
@@ -278,16 +300,26 @@ class _MisReportesScreenState extends State<MisReportesScreen> {
                   r['descripcion'] ?? 'Sin descripción',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.calendar_today_outlined, size: 10, color: AppColors.textLight),
+                    Icon(
+                      Icons.calendar_today_outlined,
+                      size: 10,
+                      color: AppColors.textLight,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       dateStr,
-                      style: TextStyle(fontSize: 10, color: AppColors.textLight),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: AppColors.textLight,
+                      ),
                     ),
                   ],
                 ),
@@ -300,30 +332,8 @@ class _MisReportesScreenState extends State<MisReportesScreen> {
   }
 
   Widget _buildStatsSection() {
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(color: AppColors.primaryDark, borderRadius: BorderRadius.circular(16)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Tasa de Resolución', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textWhite)),
-              const SizedBox(height: 6),
-              Text('Contribución a la limpieza ambiental basada en reportes validados.', style: TextStyle(fontSize: 11, color: AppColors.textWhite.withValues(alpha: 0.7))),
-              const SizedBox(height: 14),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: const [
-                  Text('92.1', style: TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: AppColors.primaryGreen, height: 1)),
-                  SizedBox(width: 4),
-                  Padding(padding: EdgeInsets.only(bottom: 6), child: Text('%', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.primaryGreen))),
-                ],
-              ),
-            ],
-          ),
-        ),
+    return Column(children: [
+
       ],
     );
   }
