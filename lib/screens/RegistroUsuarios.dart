@@ -1,54 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+// --- PUNTO DE ENTRADA PARA EJECUTAR LA PANTALLA ---
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Inicializamos Supabase con tus credenciales
   await Supabase.initialize(
     url: 'https://bhceqzmvnlepsynaxcqx.supabase.co',
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoY2Vxem12bmxlcHN5bmF4Y3F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjAwMzQsImV4cCI6MjA5MDAzNjAzNH0.U_D2N9fXWTR1EDbmhbkEkyrKxlf1xsCE4FHota6ZrqU',
   );
-  runApp(const MiAppTecnica());
-}
 
-class MiAppTecnica extends StatelessWidget {
-  const MiAppTecnica({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Technical Stewardship',
+  runApp(
+    const MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.light,
-        fontFamily: 'Segoe UI', // O la fuente que prefieras
-      ),
-      home: const InicioSesion2(),
-    );
-  }
+      home: RegistroUsuarios(),
+    ),
+  );
 }
 
-class InicioSesion2 extends StatefulWidget {
-  const InicioSesion2({super.key});
+class RegistroUsuarios extends StatefulWidget {
+  const RegistroUsuarios({super.key});
 
   @override
-  State<InicioSesion2> createState() => _InicioSesion2State();
+  State<RegistroUsuarios> createState() => _RegistroUsuariosState();
 }
 
-class _InicioSesion2State extends State<InicioSesion2> {
+class _RegistroUsuariosState extends State<RegistroUsuarios> {
+  // --- CONTROLADORES PARA EL REGISTRO ---
+  final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   @override
   void dispose() {
+    _nombreController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Usamos LayoutBuilder para detectar el tamaño de la pantalla
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -74,7 +71,7 @@ class _InicioSesion2State extends State<InicioSesion2> {
                 children: [
                   // --- CABECERA ---
                   const Text(
-                    'Administración Técnica',
+                    'NUEVO USUARIO',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white,
@@ -84,7 +81,7 @@ class _InicioSesion2State extends State<InicioSesion2> {
                     ),
                   ),
                   const Text(
-                    'EL CONSERVADOR DE PRECISIÓN',
+                    'REGISTRO DE USUARIOS',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white70,
@@ -96,9 +93,7 @@ class _InicioSesion2State extends State<InicioSesion2> {
 
                   // --- TARJETA RESPONSIVA ---
                   ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: 450,
-                    ), // Ancho máximo para escritorio
+                    constraints: const BoxConstraints(maxWidth: 450),
                     child: Container(
                       padding: const EdgeInsets.all(40),
                       decoration: BoxDecoration(
@@ -117,33 +112,57 @@ class _InicioSesion2State extends State<InicioSesion2> {
                         children: [
                           _buildCardHeader(),
                           const SizedBox(height: 30),
+
+                          // NOMBRE COMPLETO
+                          _buildLabel("NOMBRE COMPLETO"),
+                          const SizedBox(height: 8),
+                          _buildTextField(
+                            Icons.person_outline,
+                            "Ej. Jesus Del Angel",
+                            controller: _nombreController,
+                          ),
+                          const SizedBox(height: 20),
+
+                          // CORREO ELECTRÓNICO
                           _buildLabel("CORREO ELECTRÓNICO"),
                           const SizedBox(height: 8),
                           _buildTextField(
-                            Icons.blur_on,
-                            "TS-000-0000",
+                            Icons.mail_outline,
+                            "correo@gmail.com",
                             controller: _emailController,
                           ),
-                          const SizedBox(height: 25),
-                          _buildLabelWithAction(
-                            "CONTRASEÑA",
-                            "¿Olvidó su contraseña?",
-                          ),
+                          const SizedBox(height: 20),
+
+                          // CONTRASEÑA
+                          _buildLabel("CONTRASEÑA"),
                           const SizedBox(height: 8),
                           _buildTextField(
-                            Icons.shield_outlined,
-                            "••••••••",
+                            Icons.lock_outline,
+                            "Mínimo 8 caracteres",
                             obscure: true,
                             controller: _passwordController,
                           ),
+                          const SizedBox(height: 20),
+
+                          // CONFIRMAR CONTRASEÑA
+                          _buildLabel("CONFIRMAR CONTRASEÑA"),
+                          const SizedBox(height: 8),
+                          _buildTextField(
+                            Icons.shield_outlined,
+                            "Repita su contraseña",
+                            obscure: true,
+                            controller: _confirmPasswordController,
+                          ),
                           const SizedBox(height: 35),
-                          _buildLoginButton(context),
-                          const SizedBox(height: 35),
-                          _buildVisitorLink(),
-                          const SizedBox(height: 15),
+
+                          // BOTÓN DE REGISTRO
+                          _buildRegisterButton(context),
+                          const SizedBox(height: 25),
+
+                          // ENLACE A LOGIN
                           _buildFooterLink(
-                            "¿Nuevo operativo?",
-                            "Solicitar Acceso",
+                            "¿Ya tienes acceso?",
+                            "Iniciar Sesión",
                           ),
                         ],
                       ),
@@ -163,39 +182,18 @@ class _InicioSesion2State extends State<InicioSesion2> {
     );
   }
 
-  // --- WIDGETS DE APOYO (Para limpiar el código principal) ---
+  // --- WIDGETS DE APOYO ---
 
   Widget _buildCardHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         const Text(
-          'Terminal de Acceso',
+          'Nuevo Registro',
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
             color: Colors.black87,
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: const Color(0xFFB2DFDB),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Row(
-            children: [
-              Icon(Icons.verified_user, size: 14, color: Color(0xFF00695C)),
-              SizedBox(width: 5),
-              Text(
-                'ACCESO SEGURO',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF00695C),
-                ),
-              ),
-            ],
           ),
         ),
       ],
@@ -213,26 +211,6 @@ class _InicioSesion2State extends State<InicioSesion2> {
     );
   }
 
-  Widget _buildLabelWithAction(String label, String action) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _buildLabel(label),
-        GestureDetector(
-          onTap: () {},
-          child: Text(
-            action,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Colors.black54,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildTextField(
     IconData icon,
     String hint, {
@@ -246,11 +224,13 @@ class _InicioSesion2State extends State<InicioSesion2> {
         filled: true,
         fillColor: const Color(0xFFF1F4F8),
         hintText: hint,
+        hintStyle: const TextStyle(fontSize: 13, color: Colors.black38),
         prefixIcon: Icon(icon, color: Colors.grey, size: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide.none,
         ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 15),
       ),
     );
   }
@@ -263,7 +243,7 @@ class _InicioSesion2State extends State<InicioSesion2> {
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         backgroundColor: color,
-        behavior: SnackBarBehavior.floating, // Hace el mensaje "aéreo"
+        behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.only(bottom: 30, left: 20, right: 20),
         elevation: 10,
@@ -271,119 +251,85 @@ class _InicioSesion2State extends State<InicioSesion2> {
     );
   }
 
-  Widget _buildLoginButton(BuildContext context) {
+  Widget _buildRegisterButton(BuildContext context) {
     return SizedBox(
       width: double.infinity,
       height: 55,
       child: ElevatedButton(
         onPressed: () async {
+          final nombre = _nombreController.text.trim();
           final email = _emailController.text.trim();
           final password = _passwordController.text.trim();
+          final confirmPassword = _confirmPasswordController.text.trim();
 
-          if (email.isEmpty || password.isEmpty) {
+          // 1. Validar campos vacíos
+          if (nombre.isEmpty ||
+              email.isEmpty ||
+              password.isEmpty ||
+              confirmPassword.isEmpty) {
             _showFloatingMessage(
               context,
-              'Por favor, ingrese correo y contraseña',
+              'Por favor, complete todos los campos',
               Colors.redAccent,
             );
             return;
           }
 
-          // Validación de correo: formato correcto, min 3 caracteres antes del @ y dominio válido
-          final emailParts = email.split('@');
-          if (emailParts.length != 2) {
+          // 2. Validar que las contraseñas coincidan
+          if (password != confirmPassword) {
             _showFloatingMessage(
               context,
-              'Correo inválido (formato incorrecto)',
+              'Las contraseñas no coinciden',
               Colors.orange,
             );
             return;
           }
 
-          final userPart = emailParts[0];
-          final domainPart = emailParts[1].toLowerCase();
-
-          if (userPart.length < 3) {
+          // 3. Validar longitud de contraseña
+          if (password.length < 6) {
             _showFloatingMessage(
               context,
-              'El correo requiere al menos 3 letras antes del "@"',
+              'La contraseña debe tener al menos 6 caracteres',
               Colors.orange,
             );
             return;
           }
 
-          final validDomains = [
-            'gmail.com',
-            'hotmail.com',
-            'outlook.com',
-            'yahoo.com',
-            'live.com',
-            'icloud.com',
-          ];
-
-          if (!validDomains.contains(domainPart)) {
-            _showFloatingMessage(
-              context,
-              'Dominio "$domainPart" no admitido',
-              Colors.orange,
-            );
-            return;
-          }
-
-          // Validación de contraseña: mayor a 5 caracteres
-          if (password.length <= 5) {
-            _showFloatingMessage(
-              context,
-              'La contraseña debe tener más de 5 caracteres',
-              Colors.orange,
-            );
-            return;
-          }
-
-          // Validación de contraseña: texto, número y signos comunes
-          final RegExp passwordRegExp = RegExp(
-            r'^[a-zA-Z0-9@#\$%\^&\*\-\_\.\+]+$',
-          );
-          if (!passwordRegExp.hasMatch(password)) {
-            _showFloatingMessage(
-              context,
-              'Contraseña con caracteres no permitidos',
-              Colors.orange,
-            );
-            return;
-          }
-
-          // Intentar iniciar sesión con Supabase
+          // 4. Intentar crear cuenta con Supabase
           try {
             _showFloatingMessage(
               context,
-              'Autenticando operativos...',
+              'Procesando registro...',
               Colors.blueGrey,
             );
 
-            final res = await Supabase.instance.client.auth.signInWithPassword(
+            final res = await Supabase.instance.client.auth.signUp(
               email: email,
               password: password,
+              data: {
+                'full_name': nombre,
+              }, // Guardamos el nombre en los metadatos
             );
 
-            if (res.session != null) {
+            if (res.user != null) {
               _showFloatingMessage(
                 context,
-                '¡Acceso concedido, Conservador!',
+                '¡Cuenta creada exitosamente!',
                 const Color(0xFF004D40),
               );
-              // TODO: Redirigir a tu nueva pantalla aquí usando Navigator
+              // Si pruebas la navegación, descomenta la siguiente línea:
+              // Navigator.pop(context);
             }
           } on AuthException catch (e) {
             _showFloatingMessage(
               context,
-              'Denegado: ${e.message}',
+              'Error al registrar: ${e.message}',
               Colors.redAccent,
             );
           } catch (e) {
             _showFloatingMessage(
               context,
-              'Error en el enlace: $e',
+              'Error en el sistema: $e',
               Colors.redAccent,
             );
           }
@@ -397,7 +343,7 @@ class _InicioSesion2State extends State<InicioSesion2> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Iniciar Sesión',
+              'Registrar Usuario',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 16,
@@ -405,30 +351,7 @@ class _InicioSesion2State extends State<InicioSesion2> {
               ),
             ),
             SizedBox(width: 10),
-            Icon(Icons.arrow_forward, color: Colors.white, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVisitorLink() {
-    return Center(
-      child: InkWell(
-        onTap: () {},
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.person_search, size: 16, color: Color(0xFF004D40)),
-            SizedBox(width: 6),
-            Text(
-              '¿Eres un visitante? Acceso Invitado',
-              style: TextStyle(
-                color: Color(0xFF004D40),
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            Icon(Icons.how_to_reg, color: Colors.white, size: 20),
           ],
         ),
       ),
@@ -438,50 +361,12 @@ class _InicioSesion2State extends State<InicioSesion2> {
   Widget _buildFooterLink(String normalText, String boldText) {
     return Center(
       child: GestureDetector(
-        onTap: () async {
-          final email = _emailController.text.trim();
-          final password = _passwordController.text.trim();
-
-          if (email.isEmpty || password.isEmpty) {
-            _showFloatingMessage(
-              context,
-              'Escribe un correo y contraseña arriba para registrarte',
-              Colors.orange,
-            );
-            return;
-          }
-
-          try {
-            _showFloatingMessage(
-              context,
-              'Registrando nueva cuenta...',
-              Colors.blueGrey,
-            );
-
-            final res = await Supabase.instance.client.auth.signUp(
-              email: email,
-              password: password,
-            );
-
-            if (res.user != null) {
-              _showFloatingMessage(
-                context,
-                '¡Cuenta creada! Ya puedes iniciar sesión.',
-                const Color(0xFF004D40),
-              );
-            }
-          } on AuthException catch (e) {
-            _showFloatingMessage(
-              context,
-              'No se pudo registrar: ${e.message}',
-              Colors.redAccent,
-            );
-          } catch (e) {
-            _showFloatingMessage(
-              context,
-              'Error inesperado: $e',
-              Colors.redAccent,
-            );
+        onTap: () {
+          // Si lo estás corriendo aislado, Navigator.pop podría tirar un error porque no hay pantalla previa.
+          // Por ahora solo mostraremos un mensaje en consola.
+          print("Navegar al login");
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
           }
         },
         child: RichText(
@@ -553,7 +438,7 @@ class _InicioSesion2State extends State<InicioSesion2> {
               padding: EdgeInsets.symmetric(horizontal: 10),
               child: Text('•', style: TextStyle(color: Colors.white38)),
             ),
-            _legalText('ESTADO DEL SISTEMA'),
+            _legalText('TÉRMINOS DE SERVICIO'),
           ],
         ),
       ],
