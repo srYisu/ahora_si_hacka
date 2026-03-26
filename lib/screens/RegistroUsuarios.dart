@@ -312,9 +312,16 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
             );
 
             if (res.user != null) {
+              // 5. Guardar el perfil en tu propia tabla de base de datos
+              await Supabase.instance.client.from('usuarios').insert({
+                'auth_user_id': res.user!.id,
+                'nombre_completo': nombre,
+                'correo': email,
+              });
+
               _showFloatingMessage(
                 context,
-                '¡Cuenta creada exitosamente!',
+                '¡Cuenta creada exitosamente y guardada en la base de datos!',
                 const Color(0xFF004D40),
               );
               // Si pruebas la navegación, descomenta la siguiente línea:
