@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:latlong2/latlong.dart';
 import 'dart:convert';
 import 'dart:async'; // Necesario para el Timer
@@ -10,12 +11,19 @@ const Color kAccentColor = Color(0xFF00897B);
 const Color kBgColor = Color(0xFFE0F2F1);
 const Color kInputColor = Color(0xFFE8F5E9);
 
-void main() => runApp(
-  const MaterialApp(
-    home: RegistroOrganizacion(),
-    debugShowCheckedModeBanner: false,
-  ),
-);
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(
+    url: 'https://bhceqzmvnlepsynaxcqx.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoY2Vxem12bmxlcHN5bmF4Y3F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjAwMzQsImV4cCI6MjA5MDAzNjAzNH0.U_D2N9fXWTR1EDbmhbkEkyrKxlf1xsCE4FHota6ZrqU',
+  );
+  runApp(
+    const MaterialApp(
+      home: RegistroOrganizacion(),
+      debugShowCheckedModeBanner: false,
+    ),
+  );
+}
 
 class RegistroOrganizacion extends StatefulWidget {
   const RegistroOrganizacion({super.key});
@@ -447,6 +455,19 @@ class _RegistroOrganizacionState extends State<RegistroOrganizacion> {
   }
 
   // --- MÉTODOS HELPER ---
+  void _showFloatingMessage(String text, Color color) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.only(bottom: 30, left: 20, right: 20),
+      ),
+    );
+  }
+
   Widget _buildInput(
     String label,
     String hint, {
@@ -534,7 +555,57 @@ class _RegistroOrganizacionState extends State<RegistroOrganizacion> {
       width: double.infinity,
       height: 60,
       child: ElevatedButton.icon(
-        onPressed: () => print("Guardado"),
+        onPressed: () async {
+          final password = _passwordController.text.trim();
+          final confirm = _confirmPasswordController.text.trim();
+          final email = _emailController.text.trim();
+
+          if (email.isEmpty || password.isEmpty || _razonSocialController.text.trim().isEmpty) {
+            _showFloatingMessage('Revisa que los datos requeridos no estén vacíos.', Colors.orange);
+            return;
+          }
+
+          if (password != confirm) {
+            _showFloatingMessage('Las contraseñas no coinciden.', Colors.redAccent);
+            return;
+          }
+
+          try {
+            _showFloatingMessage('Creando cuenta...', Colors.blueGrey);
+            
+            // 1. Crear la cuenta en Auth de Supabase
+            final AuthResponse res = await Supabase.instance.client.auth.signUp(
+              email: email,
+              password: password,
+            );
+
+            if (res.user != null) {
+              _showFloatingMessage('Guardando perfil de la organización...', Colors.blueGrey);
+              
+              // 2. Insertar los datos adicionales en tu tabla PÚBLICA (organizaciones)
+              await Supabase.instance.client.from('organizaciones').insert({
+                'auth_user_id': res.user!.id, // Enlazamos el usuario a la base de datos
+                'razon_social': _razonSocialController.text.trim(),
+                'nit': _nitController.text.trim(),
+                'direccion': _dir1Controller.text.trim(),
+                'colonia': _dir2Controller.text.trim(),
+                'ciudad': _ciudadController.text.trim(),
+                'latitud': _latController.text.trim(),
+                'longitud': _lngController.text.trim(),
+                'nombre_responsable': _nombreRespController.text.trim(),
+                'cargo': _cargoController.text.trim(),
+                'telefono': _telefonoController.text.trim(),
+              });
+
+              _showFloatingMessage('¡Registro exitoso! Cuenta lista.', const Color(0xFF004D40));
+              // TODO: Redirigir a ventana principal aquí, si gustas.
+            }
+          } on AuthException catch (e) {
+            _showFloatingMessage('Error al crear perfil de seguridad: ${e.message}', Colors.redAccent);
+          } catch (e) {
+            _showFloatingMessage('Error al guardar datos de la entidad: $e', Colors.redAccent);
+          }
+        },
         icon: const Icon(Icons.bolt, color: Colors.white),
         label: const Text(
           'FINALIZAR REGISTRO',

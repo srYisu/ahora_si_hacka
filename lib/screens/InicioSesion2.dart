@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(
+    url: 'https://bhceqzmvnlepsynaxcqx.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoY2Vxem12bmxlcHN5bmF4Y3F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjAwMzQsImV4cCI6MjA5MDAzNjAzNH0.U_D2N9fXWTR1EDbmhbkEkyrKxlf1xsCE4FHota6ZrqU',
+  );
   runApp(const MiAppTecnica());
 }
 
@@ -257,7 +263,7 @@ class _InicioSesion2State extends State<InicioSesion2> {
       width: double.infinity,
       height: 55,
       child: ElevatedButton(
-        onPressed: () {
+        onPressed: () async {
           final email = _emailController.text.trim();
           final password = _passwordController.text.trim();
 
@@ -308,8 +314,24 @@ class _InicioSesion2State extends State<InicioSesion2> {
             return;
           }
 
-          // Éxito
-          _showFloatingMessage(context, 'Iniciando sesión como: $email', const Color(0xFF004D40));
+          // Intentar iniciar sesión con Supabase
+          try {
+            _showFloatingMessage(context, 'Autenticando operativos...', Colors.blueGrey);
+            
+            final res = await Supabase.instance.client.auth.signInWithPassword(
+              email: email,
+              password: password,
+            );
+
+            if (res.session != null) {
+              _showFloatingMessage(context, '¡Acceso concedido, Conservador!', const Color(0xFF004D40));
+              // TODO: Redirigir a tu nueva pantalla aquí usando Navigator
+            }
+          } on AuthException catch (e) {
+            _showFloatingMessage(context, 'Denegado: ${e.message}', Colors.redAccent);
+          } catch (e) {
+            _showFloatingMessage(context, 'Error en el enlace: $e', Colors.redAccent);
+          }
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF004D40),
@@ -360,19 +382,47 @@ class _InicioSesion2State extends State<InicioSesion2> {
 
   Widget _buildFooterLink(String normalText, String boldText) {
     return Center(
-      child: RichText(
-        text: TextSpan(
-          text: '$normalText ',
-          style: const TextStyle(color: Colors.grey, fontSize: 13),
-          children: [
-            TextSpan(
-              text: boldText,
-              style: const TextStyle(
-                color: Colors.black87,
-                fontWeight: FontWeight.bold,
+      child: GestureDetector(
+        onTap: () async {
+          final email = _emailController.text.trim();
+          final password = _passwordController.text.trim();
+
+          if (email.isEmpty || password.isEmpty) {
+            _showFloatingMessage(context, 'Escribe un correo y contraseña arriba para registrarte', Colors.orange);
+            return;
+          }
+
+          try {
+            _showFloatingMessage(context, 'Registrando nueva cuenta...', Colors.blueGrey);
+            
+            final res = await Supabase.instance.client.auth.signUp(
+              email: email,
+              password: password,
+            );
+
+            if (res.user != null) {
+              _showFloatingMessage(context, '¡Cuenta creada! Ya puedes iniciar sesión.', const Color(0xFF004D40));
+            }
+          } on AuthException catch (e) {
+            _showFloatingMessage(context, 'No se pudo registrar: ${e.message}', Colors.redAccent);
+          } catch (e) {
+            _showFloatingMessage(context, 'Error inesperado: $e', Colors.redAccent);
+          }
+        },
+        child: RichText(
+          text: TextSpan(
+            text: '$normalText ',
+            style: const TextStyle(color: Colors.grey, fontSize: 13),
+            children: [
+              TextSpan(
+                text: boldText,
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
