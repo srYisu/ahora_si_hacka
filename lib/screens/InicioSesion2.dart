@@ -2,6 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'entidades/entidades_shell.dart';
 import 'dashboard_shell.dart';
+import 'RegistroUsuarios.dart';
+import 'RegistroOrganizacion.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(
+    url: 'https://bhceqzmvnlepsynaxcqx.supabase.co',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoY2Vxem12bmxlcHN5bmF4Y3F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjAwMzQsImV4cCI6MjA5MDAzNjAzNH0.U_D2N9fXWTR1EDbmhbkEkyrKxlf1xsCE4FHota6ZrqU',
+  );
+  runApp(const MiAppTecnica());
+}
+
+class MiAppTecnica extends StatelessWidget {
+  const MiAppTecnica({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Technical Stewardship',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        brightness: Brightness.light,
+        fontFamily: 'Segoe UI', // O la fuente que prefieras
+      ),
+      home: const InicioSesion2(),
+    );
+  }
+}
 
 class InicioSesion2 extends StatefulWidget {
   const InicioSesion2({super.key});
@@ -117,8 +146,8 @@ class _InicioSesion2State extends State<InicioSesion2> {
                           _buildVisitorLink(),
                           const SizedBox(height: 15),
                           _buildFooterLink(
-                            "¿Nuevo operativo?",
-                            "Solicitar Acceso",
+                            "¿Nueva Institución?",
+                            "Registrarse",
                           ),
                         ],
                       ),
@@ -351,14 +380,19 @@ class _InicioSesion2State extends State<InicioSesion2> {
   Widget _buildVisitorLink() {
     return Center(
       child: InkWell(
-        onTap: () {},
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const RegistroUsuarios()),
+          );
+        },
         child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.person_search, size: 16, color: Color(0xFF004D40)),
             SizedBox(width: 6),
             Text(
-              '¿Eres un visitante? Acceso Invitado',
+              '¿no tienes cuenta? crea una aqui',
               style: TextStyle(
                 color: Color(0xFF004D40),
                 fontSize: 13,
@@ -374,51 +408,13 @@ class _InicioSesion2State extends State<InicioSesion2> {
   Widget _buildFooterLink(String normalText, String boldText) {
     return Center(
       child: GestureDetector(
-        onTap: () async {
-          final email = _emailController.text.trim();
-          final password = _passwordController.text.trim();
-
-          if (email.isEmpty || password.isEmpty) {
-            _showFloatingMessage(
-              context,
-              'Escribe un correo y contraseña arriba para registrarte',
-              Colors.orange,
-            );
-            return;
-          }
-
-          try {
-            _showFloatingMessage(
-              context,
-              'Registrando nueva cuenta...',
-              Colors.blueGrey,
-            );
-
-            final res = await Supabase.instance.client.auth.signUp(
-              email: email,
-              password: password,
-            );
-
-            if (res.user != null) {
-              _showFloatingMessage(
-                context,
-                '¡Cuenta creada! Ya puedes iniciar sesión.',
-                const Color(0xFF004D40),
-              );
-            }
-          } on AuthException catch (e) {
-            _showFloatingMessage(
-              context,
-              'No se pudo registrar: ${e.message}',
-              Colors.redAccent,
-            );
-          } catch (e) {
-            _showFloatingMessage(
-              context,
-              'Error inesperado: $e',
-              Colors.redAccent,
-            );
-          }
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const RegistroOrganizacion(),
+            ),
+          );
         },
         child: RichText(
           text: TextSpan(
