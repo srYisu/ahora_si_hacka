@@ -1,347 +1,162 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/app_theme.dart';
 
-class HistorialScreen extends StatelessWidget {
+class HistorialScreen extends StatefulWidget {
   const HistorialScreen({super.key});
+
+  @override
+  State<HistorialScreen> createState() => _HistorialScreenState();
+}
+
+class _HistorialScreenState extends State<HistorialScreen> {
+  final _supabase = Supabase.instance.client;
+  final MapController _mapController = MapController();
+  final LatLng _defaultCenter = const LatLng(31.3172, -113.5312);
+
+  int _totalTareas = 0;
+  LatLng? _currentLocation;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStats();
+    _initLocation();
+  }
+
+  Future<void> _loadStats() async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return;
+    final tareas = await _supabase.from('tareas').select('id').eq('asignado_a', userId);
+    if (mounted) setState(() => _totalTareas = (tareas as List).length);
+  }
+
+  Future<void> _initLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return;
+      LocationPermission perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.denied) {
+        perm = await Geolocator.requestPermission();
+        if (perm == LocationPermission.denied) return;
+      }
+      Position pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
+      if (mounted) setState(() => _currentLocation = LatLng(pos.latitude, pos.longitude));
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgLight,
-      appBar: AppBar(
-        backgroundColor: AppColors.bgLight,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: AppColors.textPrimary),
-          onPressed: () {},
-        ),
-        title: const Text(
-          'Resumen de Actividad',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w700,
-            fontSize: 18,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications, color: AppColors.primaryDark),
-            onPressed: () {},
-          ),
-        ],
-      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 60, 20, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Panel de control del conservador digital',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-              ),
-            ),
+            const Text('RESUMEN OPERATIVO', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.primary, letterSpacing: 2)),
+            const SizedBox(height: 4),
+            const Text('Historial', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: AppColors.primaryDark)),
             const SizedBox(height: 24),
-
-            // Top Cards
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryDark,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.assignment_turned_in_outlined, color: Colors.white, size: 28),
-                        const SizedBox(height: 16),
-                        const Text(
-                          '24',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            height: 1,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'MISIONES',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.8),
-                            fontSize: 10,
-                            letterSpacing: 1.2,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.borderLight),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.eco, color: AppColors.primaryTeal, size: 28),
-                        const SizedBox(height: 16),
-                        const Text(
-                          '92%',
-                          style: TextStyle(
-                            color: AppColors.primaryDark,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            height: 1,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'IMPACTO',
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 10,
-                            letterSpacing: 1.2,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            _statsCards(),
             const SizedBox(height: 32),
-
-            // Contexto Geográfico
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Contexto Geográfico',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const Text(
-                  'VER MAPA',
-                  style: TextStyle(
-                    color: AppColors.primaryTeal,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                    letterSpacing: 1,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Container(
-              height: 160,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                color: AppColors.primaryDark,
-              ),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.network(
-                      'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=600',
-                      fit: BoxFit.cover,
-                      color: AppColors.primaryTeal.withValues(alpha: 0.3),
-                      colorBlendMode: BlendMode.srcOver,
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 16,
-                    left: 16,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: AppColors.bgMint,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Sector 7 - Reserva Amazonas',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            const Text('Contexto Geográfico', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.primaryDark)),
+            const SizedBox(height: 12),
+            _mapArea(),
             const SizedBox(height: 32),
-
-            // Tareas Asignadas
-            const Text(
-              'Tareas Asignadas',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
+            const Text('Tareas Asignadas', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.primaryDark)),
             const SizedBox(height: 16),
-            _buildTaskItem(
-              title: 'Calibración Sensores',
-              location: 'Zona Norte • Estación B-4',
-              priority: 'ALTA',
-              priorityColor: Colors.red[100]!,
-              priorityTextColor: Colors.red[900]!,
-              progress: 0.6,
-              imageUrl: 'https://images.unsplash.com/photo-1582483864070-802c63c43cd7?q=80&w=150',
-            ),
-            const SizedBox(height: 16),
-            _buildTaskItem(
-              title: 'Patrullaje Drone',
-              location: 'Límite Reserva Sur',
-              priority: 'MEDIA',
-              priorityColor: Colors.grey[300]!,
-              priorityTextColor: Colors.grey[800]!,
-              progress: 0.1,
-              imageUrl: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?q=80&w=150',
-            ),
-            const SizedBox(height: 16),
-            _buildTaskItem(
-              title: 'Muestreo Hídrico',
-              location: 'Cuenca del Río Jaguar',
-              priority: 'BAJA',
-              priorityColor: Colors.cyan[100]!,
-              priorityTextColor: Colors.cyan[900]!,
-              progress: 0.9,
-              imageUrl: 'https://images.unsplash.com/photo-1500367215255-a222f7b8fbce?q=80&w=150',
-            ),
-            
-            const SizedBox(height: 100),
+            _emptyTasks(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTaskItem({
-    required String title,
-    required String location,
-    required String priority,
-    required Color priorityColor,
-    required Color priorityTextColor,
-    required double progress,
-    required String imageUrl,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _statsCards() => Row(
+    children: [
+      Expanded(child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(color: AppColors.primaryDark, borderRadius: BorderRadius.circular(16)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.assignment_turned_in_outlined, color: Colors.white, size: 28),
+            const SizedBox(height: 14),
+            Text('$_totalTareas', style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+            Text('ASIGNACIONES', style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1)),
+          ],
+        ),
+      )),
+      const SizedBox(width: 12),
+      Expanded(child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.borderLight)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.eco, color: AppColors.primary, size: 28),
+            const SizedBox(height: 14),
+            const Text('--', style: TextStyle(color: AppColors.primaryDark, fontSize: 32, fontWeight: FontWeight.bold)),
+            const Text('IMPACTO', style: TextStyle(color: AppColors.textLight, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1)),
+          ],
+        ),
+      )),
+    ],
+  );
+
+  Widget _mapArea() => Container(
+    height: 180,
+    decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.borderLight, width: 2)),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: Stack(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              imageUrl,
-              width: 70,
-              height: 70,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(initialCenter: _defaultCenter, initialZoom: 13),
+            children: [
+              TileLayer(urlTemplate: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', subdomains: const ['a', 'b', 'c', 'd']),
+              MarkerLayer(markers: [
+                if (_currentLocation != null)
+                  Marker(
+                    point: _currentLocation!, width: 40, height: 40,
+                    child: Container(
+                      decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 3)),
+                      child: const Icon(Icons.person, color: Colors.white, size: 20),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: priorityColor,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        priority,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: priorityTextColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.location_on, size: 14, color: AppColors.textSecondary),
-                    const SizedBox(width: 4),
-                    Text(
-                      location,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 6,
-                    backgroundColor: AppColors.borderLight,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryTeal),
                   ),
-                ),
-              ],
+              ]),
+            ],
+          ),
+          Positioned(
+            bottom: 12, left: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+              child: const Text('Puerto Peñasco, Sonora', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primaryDark)),
             ),
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+
+  Widget _emptyTasks() => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(vertical: 48),
+    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.borderLight)),
+    child: Column(
+      children: [
+        Icon(Icons.history_rounded, size: 48, color: AppColors.primary.withOpacity(0.15)),
+        const SizedBox(height: 12),
+        const Text('No hay tareas asignadas', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textLight)),
+        const SizedBox(height: 4),
+        const Text('El historial se llenará conforme completes tareas.', style: TextStyle(fontSize: 11, color: AppColors.textLight)),
+      ],
+    ),
+  );
 }
