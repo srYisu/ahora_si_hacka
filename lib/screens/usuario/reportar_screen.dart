@@ -31,35 +31,55 @@ class _ReportarScreenState extends State<ReportarScreen> {
   LatLng _currentPos = const LatLng(19.4326, -99.1332);
   String _currentAddress = 'Ubicando...';
   bool _isSearching = false;
+  bool _isLoadingLocation = true;
+  LatLng? _currentLocation;
 
   @override
   void initState() {
     super.initState();
     _labeler = ImageLabeler(options: ImageLabelerOptions(confidenceThreshold: 0.5));
-    _getCurrentLocation();
+    _initLocation();
   }
 
-  Future<void> _getCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
+  Future<void> _initLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        if (mounted) setState(() => _isLoadingLocation = false);
+        return;
+      }
 
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          if (mounted) setState(() => _isLoadingLocation = false);
+          return;
+        }
+      }
 
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
+      if (permission == LocationPermission.deniedForever) {
+        if (mounted) setState(() => _isLoadingLocation = false);
+        return;
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.best,
+      );
+      
+      if (mounted) {
+        final newPos = LatLng(position.latitude, position.longitude);
+        setState(() {
+          _currentPos = newPos;
+          _currentLocation = newPos;
+          _isLoadingLocation = false;
+        });
+        _mapController.move(newPos, 14);
+        _updateAddressFromMap(newPos);
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoadingLocation = false);
     }
-
-    if (permission == LocationPermission.deniedForever) return;
-
-    final position = await Geolocator.getCurrentPosition();
-    if (!mounted) return;
-
-    final newPos = LatLng(position.latitude, position.longitude);
-    _mapController.move(newPos, 14);
-    _updateAddressFromMap(newPos);
   }
 
   Future<void> _updateAddressFromMap(LatLng position) async {
@@ -117,6 +137,13 @@ class _ReportarScreenState extends State<ReportarScreen> {
     }
   }
 
+  bool _hasMatch(String text, List<String> keywords) {
+    for (var k in keywords) {
+      if (text.contains(k)) return true;
+    }
+    return false;
+  }
+
   Future<void> _analyzeImageWithAI(File image) async {
     final inputImage = InputImage.fromFile(image);
     final labels = await _labeler.processImage(inputImage);
@@ -129,13 +156,14 @@ class _ReportarScreenState extends State<ReportarScreen> {
       description += "${label.label} (${(label.confidence * 100).toStringAsFixed(0)}%), ";
       
       if (suggestedType == -1) {
-        if (text.contains('food') || text.contains('fruit') || text.contains('vegetable') || text.contains('plant')) {
+        // AI Logic based on ML Kit labels
+        if (_hasMatch(text, ['food', 'fruit', 'vegetable', 'plant', 'organism', 'leaf', 'wood', 'grass'])) {
           suggestedType = 3; // Orgánico
-        } else if (text.contains('plastic') || text.contains('bottle') || text.contains('can') || text.contains('waste') || text.contains('trash')) {
+        } else if (_hasMatch(text, ['plastic', 'bottle', 'can', 'waste', 'trash', 'paper', 'metal', 'glass', 'garbage', 'debris', 'tin'])) {
           suggestedType = 0; // Sólido
-        } else if (text.contains('liquid') || text.contains('water') || text.contains('oil')) {
+        } else if (_hasMatch(text, ['liquid', 'water', 'oil', 'fluid', 'beverage', 'gasoline'])) {
           suggestedType = 1; // Líquido
-        } else if (text.contains('chemical') || text.contains('battery')) {
+        } else if (_hasMatch(text, ['chemical', 'battery', 'drug', 'hazard', 'toxic', 'poison', 'medicine', 'explosion'])) {
           suggestedType = 2; // Peligroso
         }
       }
@@ -218,9 +246,9 @@ class _ReportarScreenState extends State<ReportarScreen> {
           Row(
             children: [
               Expanded(
-                child: Text(
+                child: const Text(
                   'Reportar Contaminación',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
@@ -318,7 +346,7 @@ class _ReportarScreenState extends State<ReportarScreen> {
           ),
           const SizedBox(height: 12),
 
-          // PRIORIDAD (Added)
+          // PRIORIDAD
           _phaseCard(
             'EXTRA',
             'Prioridad del Reporte',
@@ -492,7 +520,7 @@ class _ReportarScreenState extends State<ReportarScreen> {
                 ),
               ],
             ),
-            trailing: _gpsBadge(),
+            trailing: _gpsBadgeStatus(),
           ),
           const SizedBox(height: 12),
 
@@ -547,7 +575,7 @@ class _ReportarScreenState extends State<ReportarScreen> {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
+                      child: const Text(
                         'Este reporte será validado por el equipo técnico en un plazo máximo de 2 horas.',
                         style: TextStyle(
                           fontSize: 11,
@@ -579,7 +607,7 @@ class _ReportarScreenState extends State<ReportarScreen> {
 
           // Footer
           Center(
-            child: Text(
+            child: const Text(
               'PRECISION CONSERVATOR V4.2.0',
               style: TextStyle(
                 fontSize: 10,
@@ -640,33 +668,27 @@ class _ReportarScreenState extends State<ReportarScreen> {
     );
   }
 
-  Widget _gpsBadge() => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+  Widget _gpsBadgeStatus() => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
     decoration: BoxDecoration(
-      color: AppColors.primaryGreen,
+      color: _currentLocation != null ? AppColors.primaryGreen : Colors.orange, 
       borderRadius: BorderRadius.circular(20),
+      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4)]
     ),
     child: Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: MainAxisSize.min, 
       children: [
-        Container(
-          width: 5,
-          height: 5,
-          decoration: const BoxDecoration(
-            color: AppColors.textWhite,
-            shape: BoxShape.circle,
-          ),
+        if (_isLoadingLocation)
+          const SizedBox(width: 8, height: 8, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+        else
+          Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
+        
+        const SizedBox(width: 6),
+        Text(
+          _isLoadingLocation ? 'BUSCANDO GPS...' : (_currentLocation != null ? 'GPS ACTIVO' : 'SIN GPS'), 
+          style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white)
         ),
-        const SizedBox(width: 4),
-        const Text(
-          'GPS ACTIVO',
-          style: TextStyle(
-            fontSize: 8,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textWhite,
-          ),
-        ),
-      ],
+      ]
     ),
   );
 
@@ -697,7 +719,7 @@ class _ReportarScreenState extends State<ReportarScreen> {
               ),
             ),
             const Spacer(),
-            ?trailing,
+            if (trailing != null) trailing,
           ],
         ),
         const SizedBox(height: 4),
