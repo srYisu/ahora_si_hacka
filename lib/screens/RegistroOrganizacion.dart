@@ -15,7 +15,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(
     url: 'https://bhceqzmvnlepsynaxcqx.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoY2Vxem12bmxlcHN5bmF4Y3F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjAwMzQsImV4cCI6MjA5MDAzNjAzNH0.U_D2N9fXWTR1EDbmhbkEkyrKxlf1xsCE4FHota6ZrqU',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoY2Vxem12bmxlcHN5bmF4Y3F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NjAwMzQsImV4cCI6MjA5MDAzNjAzNH0.U_D2N9fXWTR1EDbmhbkEkyrKxlf1xsCE4FHota6ZrqU',
   );
   runApp(
     const MaterialApp(
@@ -459,7 +460,10 @@ class _RegistroOrganizacionState extends State<RegistroOrganizacion> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
+        content: Text(
+          text,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -560,19 +564,27 @@ class _RegistroOrganizacionState extends State<RegistroOrganizacion> {
           final confirm = _confirmPasswordController.text.trim();
           final email = _emailController.text.trim();
 
-          if (email.isEmpty || password.isEmpty || _razonSocialController.text.trim().isEmpty) {
-            _showFloatingMessage('Revisa que los datos requeridos no estén vacíos.', Colors.orange);
+          if (email.isEmpty ||
+              password.isEmpty ||
+              _razonSocialController.text.trim().isEmpty) {
+            _showFloatingMessage(
+              'Revisa que los datos requeridos no estén vacíos.',
+              Colors.orange,
+            );
             return;
           }
 
           if (password != confirm) {
-            _showFloatingMessage('Las contraseñas no coinciden.', Colors.redAccent);
+            _showFloatingMessage(
+              'Las contraseñas no coinciden.',
+              Colors.redAccent,
+            );
             return;
           }
 
           try {
             _showFloatingMessage('Creando cuenta...', Colors.blueGrey);
-            
+
             // 1. Crear la cuenta en Auth de Supabase
             final AuthResponse res = await Supabase.instance.client.auth.signUp(
               email: email,
@@ -580,11 +592,15 @@ class _RegistroOrganizacionState extends State<RegistroOrganizacion> {
             );
 
             if (res.user != null) {
-              _showFloatingMessage('Guardando perfil de la organización...', Colors.blueGrey);
-              
+              _showFloatingMessage(
+                'Guardando perfil de la organización...',
+                Colors.blueGrey,
+              );
+
               // 2. Insertar los datos adicionales en tu tabla PÚBLICA (organizaciones)
               await Supabase.instance.client.from('organizaciones').insert({
-                'auth_user_id': res.user!.id, // Enlazamos el usuario a la base de datos
+                'auth_user_id':
+                    res.user!.id, // Enlazamos el usuario a la base de datos
                 'razon_social': _razonSocialController.text.trim(),
                 'nit': _nitController.text.trim(),
                 'direccion': _dir1Controller.text.trim(),
@@ -597,13 +613,22 @@ class _RegistroOrganizacionState extends State<RegistroOrganizacion> {
                 'telefono': _telefonoController.text.trim(),
               });
 
-              _showFloatingMessage('¡Registro exitoso! Cuenta lista.', const Color(0xFF004D40));
+              _showFloatingMessage(
+                '¡Registro exitoso! Cuenta lista.',
+                const Color(0xFF004D40),
+              );
               // TODO: Redirigir a ventana principal aquí, si gustas.
             }
           } on AuthException catch (e) {
-            _showFloatingMessage('Error al crear perfil de seguridad: ${e.message}', Colors.redAccent);
+            _showFloatingMessage(
+              'Error al crear perfil de seguridad: ${e.message}',
+              Colors.redAccent,
+            );
           } catch (e) {
-            _showFloatingMessage('Error al guardar datos de la entidad: $e', Colors.redAccent);
+            _showFloatingMessage(
+              'Error al guardar datos de la entidad: $e',
+              Colors.redAccent,
+            );
           }
         },
         icon: const Icon(Icons.bolt, color: Colors.white),
@@ -623,7 +648,7 @@ class _RegistroOrganizacionState extends State<RegistroOrganizacion> {
     backgroundColor: Colors.white,
     elevation: 1,
     title: const Text(
-      'EcoMonitor',
+      'RILU',
       style: TextStyle(
         color: Colors.black,
         fontWeight: FontWeight.bold,

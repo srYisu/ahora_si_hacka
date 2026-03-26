@@ -18,7 +18,7 @@ class DashboardTrabajadorScreen extends StatelessWidget {
           onPressed: () {},
         ),
         title: const Text(
-          'EcoMonitoreo',
+          'RILU',
           style: TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w700,
@@ -142,7 +142,11 @@ class DashboardTrabajadorScreen extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.check_circle_outline, color: Colors.white, size: 32),
+                    child: const Icon(
+                      Icons.check_circle_outline,
+                      color: Colors.white,
+                      size: 32,
+                    ),
                   ),
                 ],
               ),
@@ -165,9 +169,19 @@ class DashboardTrabajadorScreen extends StatelessWidget {
                   onPressed: () {},
                   child: const Row(
                     children: [
-                      Text('Ver pantalla completa', style: TextStyle(color: AppColors.primaryTeal, fontWeight: FontWeight.w600)),
+                      Text(
+                        'Ver pantalla completa',
+                        style: TextStyle(
+                          color: AppColors.primaryTeal,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       SizedBox(width: 4),
-                      Icon(Icons.open_in_new, size: 16, color: AppColors.primaryTeal),
+                      Icon(
+                        Icons.open_in_new,
+                        size: 16,
+                        color: AppColors.primaryTeal,
+                      ),
                     ],
                   ),
                 ),
@@ -189,7 +203,8 @@ class DashboardTrabajadorScreen extends StatelessWidget {
                   ),
                   children: [
                     TileLayer(
-                      urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+                      urlTemplate:
+                          'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
                       userAgentPackageName: 'com.example.app',
                     ),
                   ],
@@ -211,12 +226,21 @@ class DashboardTrabajadorScreen extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primaryTeal.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text('Filtros', style: TextStyle(color: AppColors.primaryTeal, fontWeight: FontWeight.w600)),
+                  child: const Text(
+                    'Filtros',
+                    style: TextStyle(
+                      color: AppColors.primaryTeal,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -253,7 +277,7 @@ class DashboardTrabajadorScreen extends StatelessWidget {
               ref: '#8815',
               icon: Icons.delete_outline,
             ),
-            
+
             const SizedBox(height: 100), // Padding for bottom nav
           ],
         ),
@@ -321,7 +345,9 @@ class DashboardTrabajadorScreen extends StatelessWidget {
           Row(
             children: [
               Icon(
-                isUrgent ? Icons.hourglass_bottom : (isUp ? Icons.trending_up : Icons.trending_down),
+                isUrgent
+                    ? Icons.hourglass_bottom
+                    : (isUp ? Icons.trending_up : Icons.trending_down),
                 color: subtitleColor,
                 size: 14,
               ),
@@ -403,7 +429,11 @@ class DashboardTrabajadorScreen extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Icon(Icons.location_on, size: 14, color: AppColors.textSecondary),
+                    const Icon(
+                      Icons.location_on,
+                      size: 14,
+                      color: AppColors.textSecondary,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       address,
@@ -418,7 +448,10 @@ class DashboardTrabajadorScreen extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: tagColor,
                         borderRadius: BorderRadius.circular(20),

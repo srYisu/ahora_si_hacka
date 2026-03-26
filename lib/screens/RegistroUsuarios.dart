@@ -163,7 +163,7 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
                           const SizedBox(height: 8),
                           _buildTextField(
                             Icons.business_outlined,
-                            "Ej. ECO-2026-ABC",
+                            "Ej. 2026-00000-0",
                             controller: _codigoOrgController,
                           ),
                           const SizedBox(height: 6),

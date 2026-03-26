@@ -46,7 +46,9 @@ class PerfilTrabajadorScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20),
                           image: const DecorationImage(
-                            image: NetworkImage('https://i.pravatar.cc/150?u=elenar'),
+                            image: NetworkImage(
+                              'https://i.pravatar.cc/150?u=elenar',
+                            ),
                             fit: BoxFit.cover,
                           ),
                           border: Border.all(color: Colors.white, width: 4),
@@ -68,7 +70,11 @@ class PerfilTrabajadorScreen extends StatelessWidget {
                             color: AppColors.primaryTeal,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.edit, color: Colors.white, size: 16),
+                          child: const Icon(
+                            Icons.edit,
+                            color: Colors.white,
+                            size: 16,
+                          ),
                         ),
                       ),
                     ],
@@ -123,7 +129,11 @@ class PerfilTrabajadorScreen extends StatelessWidget {
                           color: Colors.white.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.eco, color: AppColors.bgMint, size: 18),
+                        child: const Icon(
+                          Icons.eco,
+                          color: AppColors.bgMint,
+                          size: 18,
+                        ),
                       ),
                     ],
                   ),
@@ -157,10 +167,17 @@ class PerfilTrabajadorScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   RichText(
                     text: TextSpan(
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 14, height: 1.5),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 14,
+                        height: 1.5,
+                      ),
                       children: const [
                         TextSpan(text: 'Has liderado la recuperación de '),
-                        TextSpan(text: '4.2 toneladas ', style: TextStyle(fontWeight: FontWeight.bold)),
+                        TextSpan(
+                          text: '4.2 toneladas ',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                         TextSpan(text: 'de residuos plásticos este año.'),
                       ],
                     ),
@@ -174,8 +191,12 @@ class PerfilTrabajadorScreen extends StatelessWidget {
                           child: LinearProgressIndicator(
                             value: 0.85,
                             minHeight: 8,
-                            backgroundColor: Colors.white.withValues(alpha: 0.2),
-                            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.bgMint),
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.2,
+                            ),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              AppColors.bgMint,
+                            ),
                           ),
                         ),
                       ),
@@ -261,10 +282,10 @@ class PerfilTrabajadorScreen extends StatelessWidget {
                 onTap: () {},
               ),
             ),
-            
+
             const SizedBox(height: 48),
             const Text(
-              'ECOMONITOREO V4.2.1-SCIENTIFIC',
+              'RILU V4.2.1-SCIENTIFIC',
               style: TextStyle(
                 color: AppColors.textLight,
                 fontSize: 10,
@@ -303,10 +324,7 @@ class PerfilTrabajadorScreen extends StatelessWidget {
       ),
       subtitle: Text(
         subtitle,
-        style: const TextStyle(
-          color: AppColors.textSecondary,
-          fontSize: 12,
-        ),
+        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
       ),
       trailing: const Icon(Icons.chevron_right, color: AppColors.textLight),
       onTap: () {},

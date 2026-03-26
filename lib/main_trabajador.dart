@@ -21,7 +21,7 @@ class TrabajadorApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'EcoMonitoreo - Trabajador',
+      title: 'RILU - Trabajador',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: const TrabajadorShell(),
