@@ -112,19 +112,11 @@ class _DashboardEntidadesState extends State<DashboardEntidades> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'EcoAlert',
+                      'RILU',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      'ENTERPRISE',
-                      style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 10,
-                        letterSpacing: 1.5,
                       ),
                     ),
                   ],
@@ -235,7 +227,7 @@ class _DashboardEntidadesState extends State<DashboardEntidades> {
           const Icon(Icons.help_outline, color: kTextDark),
           const SizedBox(width: 20),
           const Text(
-            'ECOALERT ENTERPRISE',
+            'RILU',
             style: TextStyle(fontWeight: FontWeight.bold, color: kTextDark),
           ),
         ],

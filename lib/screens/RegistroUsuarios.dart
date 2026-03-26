@@ -29,7 +29,14 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
 
   void _msg(String text, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(text, style: const TextStyle(fontWeight: FontWeight.w600)), backgroundColor: color, behavior: SnackBarBehavior.floating),
+      SnackBar(
+        content: Text(
+          text,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
@@ -40,7 +47,10 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
     final confirm = _confirmCtrl.text.trim();
     final codigo = _codigoCtrl.text.trim();
 
-    if (nombre.isEmpty || email.isEmpty || password.isEmpty || confirm.isEmpty) {
+    if (nombre.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirm.isEmpty) {
       _msg('Complete todos los campos obligatorios', Colors.orange);
       return;
     }
@@ -139,7 +149,11 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [AppColors.primaryDark, AppColors.primary, Color(0xFF00695C)],
+            colors: [
+              AppColors.primaryDark,
+              AppColors.primary,
+              Color(0xFF00695C),
+            ],
           ),
         ),
         child: SafeArea(
@@ -148,10 +162,30 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
               child: Column(
                 children: [
-                  const Icon(Icons.person_add_rounded, size: 56, color: AppColors.secondary),
+                  const Icon(
+                    Icons.person_add_rounded,
+                    size: 56,
+                    color: AppColors.secondary,
+                  ),
                   const SizedBox(height: 12),
-                  const Text('REGISTRO', style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: 2)),
-                  const Text('NUEVA CUENTA DE USUARIO', style: TextStyle(color: AppColors.secondary, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 2)),
+                  const Text(
+                    'REGISTRO',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const Text(
+                    'NUEVA CUENTA DE USUARIO',
+                    style: TextStyle(
+                      color: AppColors.secondary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 2,
+                    ),
+                  ),
                   const SizedBox(height: 40),
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 420),
@@ -160,22 +194,63 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(24),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10))],
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Crear Cuenta', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.primaryDark)),
+                          const Text(
+                            'Crear Cuenta',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.primaryDark,
+                            ),
+                          ),
                           const SizedBox(height: 6),
-                          const Text('Complete los datos para registrarse', style: TextStyle(fontSize: 12, color: AppColors.textLight)),
+                          const Text(
+                            'Complete los datos para registrarse',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textLight,
+                            ),
+                          ),
                           const SizedBox(height: 28),
-                          _field(Icons.person_outline, 'NOMBRE COMPLETO', _nombreCtrl, 'Ej. María López'),
+                          _field(
+                            Icons.person_outline,
+                            'NOMBRE COMPLETO',
+                            _nombreCtrl,
+                            'Ej. María López',
+                          ),
                           const SizedBox(height: 18),
-                          _field(Icons.alternate_email_rounded, 'CORREO ELECTRÓNICO', _emailCtrl, 'correo@ejemplo.com'),
+                          _field(
+                            Icons.alternate_email_rounded,
+                            'CORREO ELECTRÓNICO',
+                            _emailCtrl,
+                            'correo@ejemplo.com',
+                          ),
                           const SizedBox(height: 18),
-                          _field(Icons.lock_outline_rounded, 'CONTRASEÑA', _passwordCtrl, 'Mínimo 6 caracteres', obscure: true),
+                          _field(
+                            Icons.lock_outline_rounded,
+                            'CONTRASEÑA',
+                            _passwordCtrl,
+                            'Mínimo 6 caracteres',
+                            obscure: true,
+                          ),
                           const SizedBox(height: 18),
-                          _field(Icons.lock_rounded, 'CONFIRMAR CONTRASEÑA', _confirmCtrl, 'Repita su contraseña', obscure: true),
+                          _field(
+                            Icons.lock_rounded,
+                            'CONFIRMAR CONTRASEÑA',
+                            _confirmCtrl,
+                            'Repita su contraseña',
+                            obscure: true,
+                          ),
                           const SizedBox(height: 18),
                           _codeField(),
                           const SizedBox(height: 32),
@@ -184,17 +259,41 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
                             height: 55,
                             child: ElevatedButton(
                               onPressed: _isLoading ? null : _register,
-                              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
                               child: _isLoading
-                                  ? const CircularProgressIndicator(color: Colors.white)
-                                  : const Text('CREAR CUENTA', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white,
+                                    )
+                                  : const Text(
+                                      'CREAR CUENTA',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
                             ),
                           ),
                           const SizedBox(height: 20),
                           Center(
                             child: TextButton(
-                              onPressed: () { if (Navigator.canPop(context)) Navigator.pop(context); },
-                              child: const Text('¿Ya tienes cuenta? Inicia sesión', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                              onPressed: () {
+                                if (Navigator.canPop(context))
+                                  Navigator.pop(context);
+                              },
+                              child: const Text(
+                                '¿Ya tienes cuenta? Inicia sesión',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primary,
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -210,10 +309,24 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
     );
   }
 
-  Widget _field(IconData icon, String label, TextEditingController ctrl, String hint, {bool obscure = false}) => Column(
+  Widget _field(
+    IconData icon,
+    String label,
+    TextEditingController ctrl,
+    String hint, {
+    bool obscure = false,
+  }) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.primary, letterSpacing: 1)),
+      Text(
+        label,
+        style: const TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          color: AppColors.primary,
+          letterSpacing: 1,
+        ),
+      ),
       const SizedBox(height: 6),
       TextField(
         controller: ctrl,
@@ -224,7 +337,10 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
           hintStyle: const TextStyle(fontSize: 13, color: Colors.black26),
           filled: true,
           fillColor: AppColors.bgMint,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
           contentPadding: const EdgeInsets.symmetric(vertical: 15),
         ),
       ),
@@ -245,12 +361,30 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
           children: [
             Icon(Icons.groups_rounded, size: 18, color: AppColors.primary),
             const SizedBox(width: 8),
-            const Text('CÓDIGO DE ASOCIACIÓN', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.primary, letterSpacing: 1)),
+            const Text(
+              'CÓDIGO DE ASOCIACIÓN',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: AppColors.primary,
+                letterSpacing: 1,
+              ),
+            ),
             const Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(color: AppColors.secondary.withOpacity(0.2), borderRadius: BorderRadius.circular(6)),
-              child: const Text('OPCIONAL', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: AppColors.primary)),
+              decoration: BoxDecoration(
+                color: AppColors.secondary.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                'OPCIONAL',
+                style: TextStyle(
+                  fontSize: 8,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.primary,
+                ),
+              ),
             ),
           ],
         ),
@@ -259,19 +393,30 @@ class _RegistroUsuariosState extends State<RegistroUsuarios> {
           controller: _codigoCtrl,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.vpn_key_rounded, color: AppColors.primary, size: 20),
+            prefixIcon: const Icon(
+              Icons.vpn_key_rounded,
+              color: AppColors.primary,
+              size: 20,
+            ),
             hintText: 'Ej. 1234',
             hintStyle: const TextStyle(fontSize: 13, color: Colors.black26),
             filled: true,
             fillColor: Colors.white,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
             contentPadding: const EdgeInsets.symmetric(vertical: 15),
           ),
         ),
         const SizedBox(height: 6),
         const Text(
           'Si una organización te proporcionó un código, ingrésalo para registrarte como ayudante ambiental.',
-          style: TextStyle(fontSize: 11, color: AppColors.textLight, fontStyle: FontStyle.italic),
+          style: TextStyle(
+            fontSize: 11,
+            color: AppColors.textLight,
+            fontStyle: FontStyle.italic,
+          ),
         ),
       ],
     ),
